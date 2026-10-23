@@ -616,9 +616,9 @@ function cleanMarkdown(text) {
             <div class="chat-container h-full">
                 <div class="chat-messages space-y-4 pt-1" id="chat-messages">
                     <div class="message-bubble bot-message">
-                        <h4>EVNNPC AI Assistant (Song ngữ)</h4>
+                        <h4>Nguyễn Thị Thắm - Điện lực Than Uyên</h4>
                         Xin chào! Tôi là Trợ lý AI về Kinh doanh điện năng & DVKH Điện lực Than Uyên. Hãy nhập câu hỏi của bạn.<br><br>
-                        Hello! I am the EVNNPC Business Process AI Assistant. Please enter your question.
+                        Hello! I am the Business Electricity & Customer Service AI Assistant of Than Uyen Power. Please enter your question.
                     </div>
                 </div>
                 <div class="chat-input flex space-x-3 pt-4">
@@ -664,7 +664,7 @@ function cleanMarkdown(text) {
         if (botResponseText.includes(separator)) {
             const parts = botResponseText.split(separator);
             formattedResponse = `
-                <h4>EVNNPC AI Assistant (Song ngữ)</h4>
+                <h4>Nguyễn Thị Thắm - Điện lực Than Uyên</h4>
                 <div class="response-lang-block">
                     <strong>Tiếng Việt</strong>
                     <button class="tts-button" onclick="speakText('vi-VN', '${textIdBase}-vi')"><i class="fas fa-volume-up"></i></button>
@@ -687,7 +687,7 @@ function cleanMarkdown(text) {
 
         chatHistory.push({ role: 'bot', text: formattedResponse });
         
-        let historyHtml = `<div class="message-bubble bot-message"><h4>EVNNPC AI Assistant (Song ngữ)</h4>Xin chào! Tôi là Trợ lý AI...</div>`;
+        let historyHtml = `<div class="message-bubble bot-message"><h4>Nguyễn Thị Thắm - Điện lực Than Uyên</h4>Xin chào! Tôi là Trợ lý AI...</div>`;
         chatHistory.forEach(msg => {
             historyHtml += `<div class="message-bubble ${msg.role}-message">${msg.role === 'bot' ? msg.text : msg.text}</div>`;
         });
