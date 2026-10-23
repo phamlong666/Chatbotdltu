@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Chatbot Kinh doanh điện năng & DVKH Điện lực Than Uyên</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <style>
+        /* Font and Colors */
+        :root { 
+            --evn-blue: #005BAC;
+            --evn-red: #E30613; 
+            --text-color: #1f2937;
+        }
+        body { 
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #003366 0%, #005BAC 100%);
+            margin: 0; 
+            padding: 20px; 
+            display: flex; 
+            justify-content: center;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Hiệu ứng tuyết rơi */
+        #snow-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+        .snowflake {
+            position: absolute;
+            top: -10px;
+            background: #ffffff;
+            border-radius: 50%;
+            opacity: 0.8;
+            animation: fall linear infinite;
+        }
+        @keyframes fall {
+            0% {
+                transform: translateY(0) translateX(0);
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateY(105vh) translateX(20px);
+                opacity: 0.2;
+            }
+        }
+
+        /* Main Container */
+        .chatbot { 
+            width: 100%;
+            max-width: 900px; 
+            background: #fff; 
+            border-radius: 16px; 
+            box-shadow: 0 10px 40px rgba(2,6,23,0.15); 
+            overflow: hidden; 
+            display: flex; 
+            flex-direction: column; 
+            min-height: 700px;
+            z-index: 1;
+        }
+        /* Header */
+        .header { 
+            background: linear-gradient(90deg, #0284c7, #38bdf8);
+            color: #fff; 
+            padding: 24px; 
+            text-align: center; 
+            position: relative;
+        }
+        .header h1 { 
+            font-size: 1.8rem;
+            font-weight: 700; 
+            margin: 0; 
+            color: #0f172a; 
+        }
+        .header p { 
+            font-size: 1rem;
+            margin: 4px 0 0; 
+            color: #0f172a; /* Mã màu Xanh Đậm nổi bật */
+            font-weight: 600; /* Tăng độ đậm một chút để chữ thêm rõ nét */
+            opacity: 1; 
+        }
+        /* Body and Content */
+        .body { 
+            display: flex;
+            flex-grow: 1;
+            overflow: hidden;
+        }
+        .menu { 
+            flex: 0 0 210px;
+            background: #f9fafb; 
+            border-right: 1px solid #e5e7eb; 
+            padding: 16px; 
+            display: flex; 
+            flex-direction: column;
+            gap: 8px;
+        }
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-color);
+            font-weight: 600;
+            text-decoration: none;
+            font-size: 0.95rem;
+        }
+        .menu-item:hover {
+            background: #eef1f5;
+        }
+        .menu-item.active {
+            background: var(--evn-blue);
+            color: #fff;
+            box-shadow: 0 4px 10px rgba(0, 91, 172, 0.3);
+        }
+        .menu-item.active .icon {
+            color: #fff !important;
+        }
+        .content { 
+            flex-grow: 1;
+            padding: 24px; 
+            overflow-y: auto; 
+            background: #fff;
+        }
+        /* Button Styles */
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+            text-align: center;
+            font-size: 1rem;
+        }
+        .btn.primary {
+            background: var(--evn-blue);
+            color: #fff;
+            border-color: var(--evn-blue);
+        }
+        .btn.primary:hover {
+            background: #004b8a;
+            border-color: #004b8a;
+            transform: translateY(-1px);
+        }
+        .btn.ghost {
+            background: #fff;
+            color: var(--evn-blue);
+            border-color: var(--evn-blue);
+        }
+        .btn.ghost:hover {
+            background: #f0f4f7;
+            transform: translateY(-1px);
+        }
+
+        /* Q&A Chat Specific Styles */
+        .chat-container {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .chat-messages {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        .message-bubble {
+            max-width: 85%;
+            padding: 12px 16px;
+            margin-bottom: 15px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            line-height: 1.6;
+        }
+        .user-message {
+            background-color: #e3e8f0;
+            margin-left: auto;
+            border-top-right-radius: 4px;
+        }
+        .bot-message {
+            background-color: #f7f9fc;
+            border: 1px solid #e5e7eb;
+            border-top-left-radius: 4px;
+        }
+        .bot-message h4 {
+            font-weight: 700;
+            color: var(--evn-blue);
+            margin-bottom: 8px;
+        }
+        .tts-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--evn-blue);
+            font-size: 1rem;
+            margin-left: 8px;
+        }
+        .tts-button:hover {
+            color: #003a75;
+        }
+        .response-lang-block {
+            padding-top: 8px;
+            border-top: 1px solid #e5e7eb;
+            margin-top: 10px;
+        }
+        .loading-dot {
+            width: 10px;
+            height: 10px;
+            background-color: var(--evn-blue);
+            border-radius: 50%;
+            display: inline-block;
+            margin: 0 2px;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .loading-dot:nth-child(1) { animation-delay: -0.32s; }
+        .loading-dot:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1.0); }
+        }
+
+        /* Quick Learn Specific Styles */
+        .question-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: all 0.2s ease-in-out;
+        }
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 16px;
+            background-color: #f9fafb;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--text-color);
+            transition: background-color 0.2s;
+        }
+        .question-header:hover {
+            background-color: #f0f4f7;
+        }
+        .answer-body {
+            padding: 14px 16px;
+            border-top: 1px solid #e5e7eb;
+            background-color: #fff;
+            color: #4b5563;
+        }
+        .answer-body.hidden {
+            display: none;
+        }
+    </style>
+<script>
+function cleanMarkdown(text) {
+    return text
+        .replace(/\*\*(.*?)\*\*/g, '$1')
+        .replace(/\*(.*?)\*/g, '$1')
+        .replace(/#{1,6}\s?/g, '')
+        .replace(/`{1,3}/g, '')
+        .replace(/_/g, '')
+        .replace(/>/g, '')
+        .replace(/\[(.*?)\]\(.*?\)/g, '$1')
+        .replace(/\n{2,}/g, '\n')
+        .trim();
+}
+</script>
+</head>
+<body>
+
+<!-- Hiệu ứng tuyết rơi -->
+<div id="snow-container"></div>
+
+<div class="chatbot">
+    <div class="header">
+        <h1>🤖Chatbot Kinh doanh điện năng & DVKH <br> Điện lực Than Uyên</h1>
+        <p>Bản quyền © 2026 của Nguyễn Thị Thắm</p>
+    </div>
+
+    <div class="body">
+        <div class="menu">
+            <div id="qna-menu-item" class="menu-item" onclick="switchMode('qna')">
+                <i class="fas fa-robot icon text-gray-700"></i>
+                <span>Hỏi Đáp AI</span>
+            </div>
+            <div id="quicklearn-menu-item" class="menu-item" onclick="switchMode('quicklearn')">
+                <i class="fas fa-bolt icon text-gray-700"></i>
+                <span>Học Nhanh (162)</span>
+            </div>
+            <div id="quiz-menu-item" class="menu-item" onclick="switchMode('quiz')">
+                <i class="fas fa-pencil-alt icon text-gray-700"></i>
+                <span>Thi trắc nghiệm</span>
+            </div>
+
+            <hr class="my-2 border-gray-200">
+
+            <!-- Các nút đường link truy cập nhanh -->
+            <a href="https://www.youtube.com/watch?v=MN99xct3HQw" target="_blank" class="menu-item">
+                <i class="fab fa-youtube text-red-600 icon"></i>
+                <span>Hãy thư giãn nào</span>
+            </a>
+            <a href="http://10.21.51.18:7005/CMIS40/#/login" target="_blank" class="menu-item">
+                <i class="fas fa-server text-blue-600 icon"></i>
+                <span>CMIS 4.0</span>
+            </a>
+            <a href="https://doffice.npc.com.vn/project" target="_blank" class="menu-item">
+                <i class="fas fa-building text-green-600 icon"></i>
+                <span>Doffice NPC</span>
+            </a>
+        </div>
+
+        <div id="content" class="content"></div>
+    </div>
+</div>
+
+<script type="module">
+    const GEMINI_API_URL = "https://chatbot-kddn.vercel.app/api/chat";
+    const systemPrompt = "Bạn là Trợ lý AI chuyên nghiệp về Quy trình kinh doanh điện năng của Tổng công ty Điện lực miền Bắc (EVNNPC). Vui lòng thực hiện các quy tắc sau:\n1. Ưu tiên sử dụng thông tin từ tài liệu PDF '2025_QD1135_Quy trinh kinh doanh EVNNPC.pdf' để trả lời các câu hỏi liên quan đến quy trình kinh doanh, điện năng, hợp đồng và các thủ tục nội bộ của EVNNPC.\n2. Nếu câu hỏi không liên quan đến tài liệu, hãy sử dụng kiến thức chung để trả lời.\n3. Mọi câu trả lời phải được cung cấp song ngữ: Tiếng Việt và Tiếng Anh. Bắt đầu bằng phần Tiếng Việt, sau đó là dòng --- English Translation ---, rồi đến phần Tiếng Anh.\n4. Giữ câu trả lời ngắn gọn, chính xác và chuyên nghiệp.\n5. Không sử dụng markdown.\n6. Trả lời bằng văn bản thuần túy tự nhiên để hỗ trợ đọc giọng nói.";
+    
+    let currentMode = 'qna';
+    let quizState = {
+        currentSetIndex: -1,
+        currentQuestionIndex: 0,
+        answers: [],
+        score: 0,
+        isReviewed: false 
+    };
+    let chatHistory = [];
+
+    // Đầy đủ 162 câu hỏi Học Nhanh
+    const quickLearnData = [
+        { q: "Thời gian tối đa để tiếp nhận và giải quyết yêu cầu cấp điện trung áp là bao lâu?", a: "Tối đa 07 ngày làm việc kể từ khi nhận đủ hồ sơ hợp lệ." },
+        { q: "Khách hàng cấp điện hạ áp sinh hoạt cần cung cấp giấy tờ gì?", a: "Đơn đề nghị mua điện, giấy tờ tùy thân (CMND/CCCD/Hộ chiếu), giấy tờ chứng minh quyền sở hữu/sử dụng địa điểm." },
+        { q: "Điện lực có được yêu cầu khách hàng tự lắp đặt công tơ không?", a: "Không, Điện lực phải chịu trách nhiệm lắp đặt công tơ đo đếm điện năng theo quy định." },
+        { q: "Thời điểm có hiệu lực của Hợp đồng mua bán điện mới là khi nào?", a: "Là ngày hai bên ký kết Hợp đồng hoặc ngày khác do hai bên thỏa thuận và ghi rõ trong Hợp đồng." },
+        { q: "Khi thay đổi mục đích sử dụng điện, khách hàng cần thực hiện thủ tục gì?", a: "Thông báo cho Điện lực và ký lại hoặc bổ sung Hợp đồng mua bán điện phù hợp với mục đích mới." },
+        { q: "Thời gian thông báo ngừng/giảm cung cấp điện theo kế hoạch là bao lâu?", a: "Thông báo trước tối thiểu 05 ngày làm việc, trừ trường hợp khẩn cấp." },
+        { q: "Thế nào là dịch chuyển phụ tải điện?", a: "Là việc khách hàng tự nguyện chuyển một phần phụ tải từ giờ cao điểm sang giờ thấp điểm theo yêu cầu của Điện lực." },
+        { q: "Quy định về khoảng cách an toàn lưới điện là do cơ quan nào ban hành?", a: "Bộ Công Thương." },
+        { q: "Thời hạn giải quyết yêu cầu thanh lý Hợp đồng mua bán điện là bao lâu?", a: "Tối đa 03 ngày làm việc kể từ ngày nhận được đề nghị hợp lệ." },
+        { q: "Việc niêm phong, kẹp chì thiết bị đo đếm do bên nào thực hiện?", a: "Do Điện lực thực hiện sau khi lắp đặt hoặc kiểm tra, sửa chữa." },
+        { q: "Hợp đồng mua bán điện được lập thành mấy bản?", a: "Thường là 02 bản, mỗi bên giữ 01 bản có giá trị pháp lý như nhau." },
+        { q: "Trường hợp nào khách hàng được miễn trừ việc ngừng, giảm cung cấp điện?", a: "Khách hàng sử dụng điện cho mục đích quốc phòng, an ninh, y tế, sản xuất nước sạch, thoát nước đô thị." },
+        { q: "Thời gian tối đa thay thế công tơ hỏng là bao lâu?", a: "Tối đa 24 giờ kể từ khi phát hiện (đối với khu vực thành phố) hoặc 48 giờ (đối với khu vực nông thôn)." },
+        { q: "Việc cấp lại Hợp đồng mua bán điện do bị mất, hỏng được giải quyết trong bao lâu?", a: "Tối đa 03 ngày làm việc." },
+        { q: "Khách hàng lớn (≥ 110kV) có quyền và nghĩa vụ gì khác biệt?", a: "Nghĩa vụ đăng ký tham gia Chương trình Điều chỉnh phụ tải điện (DR) theo quy định." },
+        { q: "Thủ tục di dời công tơ do yêu cầu của khách hàng được giải quyết trong bao lâu?", a: "Tối đa 05 ngày làm việc." },
+        { q: "Đơn vị nào chịu trách nhiệm kiểm định công tơ điện?", a: "Đơn vị kiểm định độc lập được cấp phép, có sự giám sát của Điện lực và khách hàng (nếu cần)." },
+        { q: "Thời gian tối thiểu thông báo lịch ghi chỉ số công tơ định kỳ là bao lâu?", a: "Tối thiểu 05 ngày trước ngày ghi chỉ số." },
+        { q: "Phạm vi áp dụng của Quy trình Kinh doanh Điện năng EVNNPC?", a: "Áp dụng cho toàn bộ các đơn vị thuộc Tổng công ty Điện lực miền Bắc." },
+        { q: "Mục đích của việc kiểm tra định kỳ hệ thống đo đếm là gì?", a: "Đảm bảo độ chính xác của công tơ, kịp thời phát hiện và xử lý các sai sót hoặc vi phạm." },
+        { q: "Thời hạn thanh toán tiền điện của khách hàng là bao lâu?", a: "Theo quy định trong Hợp đồng và Thông tư của Bộ Công Thương (thường 15 ngày kể từ ngày phát hành Hóa đơn)." },
+        { q: "Khách hàng có quyền yêu cầu kiểm tra hóa đơn tiền điện trong thời gian nào?", a: "Trong vòng 1 năm kể từ ngày nhận được hóa đơn." },
+        { q: "Phương thức thanh toán tiền điện phổ biến nhất hiện nay là gì?", a: "Thanh toán qua ngân hàng (chuyển khoản, trích nợ tự động) hoặc qua các tổ chức trung gian thanh toán." },
+        { q: "Khiếu nại về tiền điện được giải quyết trong thời gian tối đa là bao lâu?", a: "Tối đa 07 ngày làm việc kể từ ngày nhận được khiếu nại." },
+        { q: "Hóa đơn điện tử được gửi cho khách hàng bằng phương tiện nào?", a: "Qua email, tin nhắn SMS/Zalo, hoặc qua ứng dụng chăm sóc khách hàng (App CSKH)." },
+        { q: "Nếu khách hàng không thanh toán tiền điện đúng hạn, Điện lực sẽ làm gì?", a: "Gửi thông báo tạm ngừng cấp điện sau khi quá thời hạn quy định." },
+        { q: "Thủ tục hoàn trả tiền điện thừa cho khách hàng được thực hiện như thế nào?", a: "Điện lực chủ động hoàn trả hoặc cấn trừ vào kỳ thanh toán tiếp theo." },
+        { q: "Đơn giá tiền điện được áp dụng theo quy định của cơ quan nào?", a: "Quyết định của Bộ Công Thương hoặc Thủ tướng Chính phủ." },
+        { q: "Chỉ số công tơ được chốt vào ngày nào hàng tháng?", a: "Ngày đã được thỏa thuận trong Hợp đồng, thường là ngày cuối cùng của tháng hoặc ngày đã đăng ký với Điện lực." },
+        { q: "Nếu công tơ bị sai số do lỗi của Điện lực, khách hàng được bồi thường thế nào?", a: "Được hoàn trả số tiền chênh lệch tương ứng với sai số trong thời gian xác định." },
+        { q: "Khách hàng có thể tra cứu lịch sử tiêu thụ điện ở đâu?", a: "Qua App CSKH, Website CSKH hoặc tại các Phòng giao dịch Điện lực." },
+        { q: "Khi nào thì áp dụng giá điện sinh hoạt bậc thang?", a: "Áp dụng cho khách hàng sử dụng điện cho mục đích sinh hoạt." },
+        { q: "Việc miễn, giảm tiền điện được áp dụng trong trường hợp nào?", a: "Theo các quy định, chính sách của Nhà nước hoặc các chương trình hỗ trợ thiên tai, dịch bệnh." },
+        { q: "Thời gian tối đa để phát hành hóa đơn tiền điện kể từ ngày ghi chỉ số?", a: "Tối đa 02 ngày làm việc." },
+        { q: "Khách hàng có thể thay đổi ngày ghi chỉ số công tơ không?", a: "Có thể, nhưng phải thỏa thuận với Điện lực và tuân thủ quy định chung." },
+        { q: "Điện lực phải thông báo về việc ngừng cung cấp điện do nợ tiền điện trước bao lâu?", a: "Thông báo trước tối thiểu 03 ngày làm việc (trừ ngày nghỉ)." },
+        { q: "Chính sách giá điện cho cơ sở lưu trú du lịch được áp dụng như thế nào?", a: "Được áp dụng theo giá điện sản xuất, kinh doanh (tùy thuộc vào cấp điện áp)." },
+        { q: "Công thức tính tiền điện cơ bản là gì?", a: "Số kWh tiêu thụ nhân với Đơn giá điện (cộng thêm thuế GTGT và các phí liên quan)." },
+        { q: "Điện lực có bắt buộc phải cung cấp bản in hóa đơn không?", a: "Không, nhưng phải cung cấp bản điện tử và có thể cung cấp bản in nếu khách hàng yêu cầu." },
+        { q: "Hình thức thanh toán bằng ủy nhiệm chi/trích nợ tự động là gì?", a: "Khách hàng ủy quyền cho ngân hàng tự động thanh toán tiền điện hàng tháng từ tài khoản của mình." },
+        { q: "Chất lượng điện áp được quy định bởi thông số nào?", a: "Sai lệch điện áp so với điện áp danh định (thường là ±5% hoặc ±10% tùy cấp điện áp)." },
+        { q: "Khách hàng có quyền yêu cầu Điện lực kiểm tra chất lượng điện áp không?", a: "Có, Điện lực phải thực hiện kiểm tra trong thời gian quy định." },
+        { q: "Thời gian khắc phục sự cố điện áp tối đa là bao lâu?", a: "Theo quy định về chỉ tiêu độ tin cậy cung cấp điện (thường vài giờ tùy mức độ sự cố)." },
+        { q: "Thế nào là sự cố thoáng qua trên lưới điện?", a: "Sự cố ngắn mạch tự triệt tiêu sau một khoảng thời gian ngắn (ví dụ: do sét, cành cây chạm vào)." },
+        { q: "Điện lực phải bồi thường cho khách hàng trong trường hợp nào?", a: "Vi phạm các cam kết về thời gian giải quyết dịch vụ, chất lượng điện năng theo thỏa thuận (nếu có)." },
+        { q: "Vai trò của Trung tâm Điều độ Hệ thống điện miền Bắc (A0) là gì?", a: "Điều hành hệ thống điện quốc gia trong phạm vi miền Bắc, đảm bảo vận hành an toàn, ổn định." },
+        { q: "Khi phát hiện sự cố trên lưới điện, khách hàng nên liên hệ qua kênh nào?", a: "Tổng đài Chăm sóc khách hàng hoặc số điện thoại khẩn cấp của Điện lực tại địa phương." },
+        { q: "Thời gian xử lý sự cố đứt dây dẫn điện hạ áp tối đa là bao lâu?", a: "Tối đa 02 giờ kể từ khi tiếp nhận thông tin và xác định được vị trí (trong điều kiện thời tiết cho phép)." },
+        { q: "Điện lực có trách nhiệm kiểm tra đường dây sau công tơ của khách hàng không?", a: "Không, Điện lực chỉ chịu trách nhiệm đến công tơ đo đếm. Khách hàng chịu trách nhiệm về hệ thống điện nội bộ." },
+        { q: "Việc bảo trì, bảo dưỡng định kỳ lưới điện được thực hiện với tần suất nào?", a: "Theo kế hoạch hàng năm của Điện lực, tuân thủ các quy chuẩn kỹ thuật an toàn." },
+        { q: "Khách hàng có được phép tự ý tháo dỡ hoặc di chuyển công tơ điện không?", a: "Không, mọi thao tác liên quan đến công tơ phải do nhân viên Điện lực thực hiện." },
+        { q: "Thế nào là 'cắt điện khẩn cấp'?", a: "Là việc ngừng cung cấp điện ngay lập tức để đảm bảo an toàn cho người, thiết bị hoặc xử lý sự cố nghiêm trọng." },
+        { q: "Chỉ số SAIFI là gì?", a: "Chỉ số tần suất mất điện kéo dài trung bình của hệ thống (System Average Interruption Frequency Index)." },
+        { q: "Chỉ số SAIDI là gì?", a: "Chỉ số thời gian mất điện kéo dài trung bình của hệ thống (System Average Interruption Duration Index)." },
+        { q: "Khách hàng cần làm gì khi có yêu cầu đo kiểm chất lượng điện năng?", a: "Gửi văn bản đề nghị đến Điện lực, nêu rõ lý do và thời điểm cần đo kiểm." },
+        { q: "Điện lực sử dụng thiết bị gì để đo kiểm chất lượng điện áp?", a: "Máy ghi/đo chất lượng điện (Power Quality Analyzer)." },
+        { q: "Hành vi trộm cắp điện bị xử lý như thế nào?", a: "Lập biên bản vi phạm, truy thu tiền điện, và chuyển cơ quan chức năng xử lý theo pháp luật." },
+        { q: "Tuyến cáp ngầm có được xây dựng dưới lòng đường không?", a: "Có, nhưng phải tuân thủ quy hoạch đô thị và các quy định về an toàn công trình ngầm." },
+        { q: "Khách hàng có được sử dụng điện ngoài mục đích đã ghi trong Hợp đồng không?", a: "Không, phải sử dụng đúng mục đích. Nếu thay đổi phải thông báo và ký lại Hợp đồng." },
+        { q: "Quy tắc an toàn khi tiếp xúc với thiết bị điện là gì?", a: "Chỉ những người có chuyên môn, được đào tạo mới được phép tiếp xúc, tuân thủ nghiêm ngặt các quy tắc an toàn." },
+        { q: "Các kênh tiếp nhận yêu cầu dịch vụ điện của EVNNPC là gì?", a: "Tổng đài CSKH (19001100/19009000), App/Website CSKH, Zalo OA, Email, Phòng giao dịch Điện lực." },
+        { q: "Thời gian làm việc của Tổng đài CSKH EVNNPC?", a: "24/7 (24 giờ mỗi ngày, 7 ngày mỗi tuần)." },
+        { q: "Khách hàng có thể đăng ký dịch vụ điện qua hình thức trực tuyến nào?", a: "Cổng Dịch vụ công Quốc gia, App/Website CSKH của EVNNPC." },
+        { q: "Thời gian phản hồi ban đầu đối với một yêu cầu dịch vụ trực tuyến là bao lâu?", a: "Phải có phản hồi ngay lập tức hoặc trong vòng 30 phút (đối với giờ hành chính)." },
+        { q: "Thế nào là 'Điện lực một cửa'?", a: "Là mô hình tập trung các dịch vụ kinh doanh điện năng tại một đầu mối duy nhất để giao dịch với khách hàng." },
+        { q: "Vai trò của App Chăm sóc Khách hàng là gì?", a: "Cung cấp các tiện ích tra cứu thông tin, thanh toán, đăng ký dịch vụ, và nhận thông báo về điện." },
+        { q: "Khách hàng có thể tra cứu thông tin lịch tạm ngừng cấp điện ở đâu?", a: "Trên Website/App CSKH, thông qua tin nhắn SMS/Zalo hoặc thông báo tại khu vực." },
+        { q: "Điện lực có được từ chối yêu cầu dịch vụ nếu khách hàng nợ tiền điện không?", a: "Chỉ được từ chối yêu cầu liên quan đến tăng công suất hoặc thay đổi Hợp đồng, không được từ chối các yêu cầu khẩn cấp như xử lý sự cố." },
+        { q: "Chỉ số hài lòng khách hàng (CSI) được đo lường như thế nào?", a: "Thông qua các cuộc khảo sát độc lập sau khi cung cấp dịch vụ hoặc khảo sát định kỳ." },
+        { q: "Khách hàng có cần trả phí cho dịch vụ tư vấn sử dụng điện tiết kiệm không?", a: "Không, đây là dịch vụ miễn phí của Điện lực." },
+        { q: "Các hình thức hỗ trợ khách hàng đăng ký mua điện mặt trời mái nhà?", a: "Tư vấn kỹ thuật, thủ tục đấu nối và ký kết Hợp đồng mua bán điện (nếu có)." },
+        { q: "Thế nào là 'Hỗ trợ khách hàng'?", a: "Là hoạt động cung cấp thông tin, giải quyết thắc mắc, khiếu nại, và hỗ trợ kỹ thuật cho khách hàng sử dụng điện." },
+        { q: "Điện lực có trách nhiệm công khai quy trình, thủ tục dịch vụ không?", a: "Có, phải niêm yết công khai tại phòng giao dịch và trên các kênh thông tin điện tử." },
+        { q: "Thời gian tối đa để trả lời khiếu nại bằng văn bản là bao lâu?", a: "Tối đa 15 ngày làm việc, hoặc có thể kéo dài hơn nếu cần xác minh phức tạp (phải thông báo cho khách hàng)." },
+        { q: "Lịch sử giao dịch của khách hàng được lưu trữ trong thời gian bao lâu?", a: "Thường là tối thiểu 5 năm theo quy định của pháp luật và quy trình nội bộ." },
+        { q: "Khách hàng có thể thay đổi thông tin liên lạc đã đăng ký bằng cách nào?", a: "Thông qua App CSKH, gửi yêu cầu bằng văn bản hoặc gọi điện đến Tổng đài CSKH." },
+        { q: "Trong các trường hợp khẩn cấp, Điện lực phải có mặt tại hiện trường trong bao lâu?", a: "Tùy thuộc vào khu vực (thành phố/nông thôn) nhưng phải đảm bảo nhanh nhất có thể (thường dưới 1-2 giờ)." },
+        { q: "Thế nào là dịch vụ 'Điện lực đồng hành'?", a: "Một tên gọi chung cho các chương trình chăm sóc, hỗ trợ khách hàng liên tục của ngành Điện." },
+        { q: "Chính sách đối với khách hàng sử dụng điện tiết kiệm là gì?", a: "Thường là các chương trình khuyến khích, tuyên truyền hoặc tặng thưởng." },
+        { q: "Việc tiếp nhận hồ sơ qua Cổng Dịch vụ công Quốc gia có giá trị pháp lý không?", a: "Có, có giá trị pháp lý tương đương với hồ sơ giấy." },
+        { q: "Chu kỳ kiểm định định kỳ đối với công tơ điện là bao lâu?", a: "Theo quy định của cơ quan quản lý nhà nước về đo lường (thường là 5 năm)." },
+        { q: "Ai là người chịu trách nhiệm chi phí kiểm định công tơ đột xuất?", a: "Bên yêu cầu. Nếu công tơ sai số quá mức cho phép, Điện lực chịu; ngược lại, khách hàng chịu." },
+        { q: "Khi thay thế công tơ định kỳ, Điện lực có cần thông báo trước không?", a: "Có, phải thông báo trước tối thiểu 05 ngày làm việc." },
+        { q: "Việc lấy mẫu điện năng sử dụng để kiểm tra tại hiện trường nhằm mục đích gì?", a: "Xác định các dấu hiệu can thiệp bất hợp pháp hoặc vi phạm Hợp đồng mua bán điện." },
+        { q: "Thủ tục xử lý khi phát hiện công tơ bị can thiệp bất hợp pháp?", a: "Lập biên bản vi phạm, niêm phong tang vật, và chuyển hồ sơ lên cấp trên xử lý." },
+        { q: "Công tơ đo đếm phải đạt tiêu chuẩn kỹ thuật nào?", a: "Tiêu chuẩn Việt Nam (TCVN) và tiêu chuẩn kỹ thuật đo lường do Bộ Khoa học và Công nghệ quy định." },
+        { q: "Hệ thống đo đếm từ xa (AMI) mang lại lợi ích gì cho Điện lực?", a: "Giảm nhân công ghi chỉ số, thu thập dữ liệu real-time, phát hiện sự cố nhanh chóng." },
+        { q: "Trong trường hợp mất điện, công tơ có bị mất dữ liệu không?", a: "Không, công tơ điện tử có bộ nhớ dự phòng để lưu trữ dữ liệu." },
+        { q: "Khi nào cần lắp đặt công tơ 3 pha?", a: "Khi tổng công suất sử dụng của khách hàng vượt quá ngưỡng quy định hoặc theo yêu cầu về thiết bị sử dụng điện." },
+        { q: "Vị trí lắp đặt công tơ đo đếm phải tuân thủ nguyên tắc gì?", a: "Dễ quan sát, dễ thao tác, đảm bảo an toàn và nằm trên ranh giới sở hữu giữa hai bên." },
+        { q: "Thiết bị phụ trợ nào cần thiết cho công tơ 3 pha đo lường gián tiếp?", a: "Máy biến dòng điện (CT) và/hoặc máy biến điện áp (VT)." },
+        { q: "Thời gian lưu trữ dữ liệu chỉ số công tơ trên hệ thống của Điện lực là bao lâu?", a: "Theo quy định, thường là 10 năm hoặc lâu hơn." },
+        { q: "Khách hàng có thể theo dõi việc ghi chỉ số công tơ của mình không?", a: "Có quyền giám sát quá trình ghi chỉ số nếu việc ghi chỉ số được thực hiện tại chỗ." },
+        { q: "Việc thay thế công tơ có ảnh hưởng đến hóa đơn tiền điện không?", a: "Không, việc tính toán tiền điện phải được chốt chỉ số chính xác tại thời điểm thay thế." },
+        { q: "Các yếu tố ảnh hưởng đến tuổi thọ của công tơ điện là gì?", a: "Nhiệt độ, độ ẩm, chất lượng điện năng và môi trường lắp đặt." },
+        { q: "Thế nào là 'sai số cho phép' của công tơ?", a: "Là giới hạn sai lệch giữa chỉ số công tơ và giá trị đo chuẩn được quy định trong tiêu chuẩn đo lường." },
+        { q: "Tần suất kiểm tra định kỳ đối với các trạm biến áp của Điện lực?", a: "Theo quy trình vận hành và bảo dưỡng của ngành Điện (thường là hàng năm)." },
+        { q: "Yêu cầu về độ chính xác của hệ thống đo đếm cho khách hàng trung áp?", a: "Phải đạt cấp chính xác cao (ví dụ: cấp 0.5s hoặc 0.2s) theo quy định." },
+        { q: "Việc cắt điện để kiểm tra định kỳ công tơ có cần thông báo trước không?", a: "Có, phải tuân thủ quy định về thông báo ngừng cấp điện theo kế hoạch." },
+        { q: "Biên bản kiểm tra hệ thống đo đếm phải có chữ ký của những ai?", a: "Đại diện Điện lực và Khách hàng (hoặc người được ủy quyền)." },
+        { q: "Cơ quan nào chịu trách nhiệm quản lý nhà nước về an toàn điện?", a: "Bộ Công Thương." },
+        { q: "Khách hàng có trách nhiệm gì đối với việc bảo vệ công trình điện?", a: "Không được xâm phạm, không được xây dựng công trình trong hành lang an toàn lưới điện khi chưa được phép." },
+        { q: "Thế nào là hành lang an toàn lưới điện?", a: "Khoảng không gian giới hạn xung quanh đường dây điện, trạm điện để đảm bảo an toàn." },
+        { q: "Thời gian tối đa để Điện lực hoàn thành đấu nối công trình điện sau khi ký Hợp đồng?", a: "Theo thỏa thuận, nhưng phải tuân thủ thời gian tối đa theo quy định (ví dụ: 03-07 ngày làm việc)." },
+        { q: "Quy tắc '5 không' trong an toàn điện là gì?", a: "Không chạm, không trèo, không bắn, không thả diều, không tự ý sửa chữa." },
+        { q: "Các trường hợp khẩn cấp về thiên tai, sự cố lớn, Điện lực được phép làm gì?", a: "Thực hiện ngừng, giảm cung cấp điện ngay lập tức mà không cần thông báo trước." },
+        { q: "Khách hàng có thể yêu cầu lắp đặt thiết bị bảo vệ (chống sét, chống rò) không?", a: "Có, và Điện lực khuyến khích. Khách hàng chịu chi phí lắp đặt thiết bị sau công tơ." },
+        { q: "Đơn vị nào chịu trách nhiệm phê duyệt kế hoạch cắt điện lớn?", a: "Tổng công ty Điện lực miền Bắc (EVNNPC) hoặc cấp có thẩm quyền cao hơn." },
+        { q: "Các yếu tố nào được coi là vi phạm an toàn sử dụng điện?", a: "Sử dụng thiết bị không đạt chuẩn, câu móc điện trái phép, không đảm bảo khoảng cách an toàn." },
+        { q: "Lợi ích của việc sử dụng điện tiết kiệm và hiệu quả là gì?", a: "Giảm chi phí, giảm áp lực lên hệ thống điện quốc gia, góp phần bảo vệ môi trường." },
+        { q: "Thời gian tối đa để thay đổi thông tin Hợp đồng (tên, địa chỉ) là bao lâu?", a: "Tối đa 03 ngày làm việc kể từ khi nhận đủ hồ sơ." },
+        { q: "Nghĩa vụ của khách hàng khi tham gia chương trình Điều chỉnh phụ tải điện (DR)?", a: "Thực hiện việc giảm phụ tải theo yêu cầu của Điện lực khi có thông báo." },
+        { q: "Quy định về thời gian giao dịch tại các phòng giao dịch Điện lực?", a: "Theo giờ hành chính, nhưng phải đảm bảo linh hoạt, thuận tiện cho khách hàng." },
+        { q: "Thế nào là công trình điện lực?", a: "Công trình xây dựng có chức năng phục vụ cho hoạt động phát điện, truyền tải, phân phối và quản lý, vận hành hệ thống điện." },
+        { q: "Khách hàng có được lắp đặt công tơ phụ để theo dõi không?", a: "Được, nhưng công tơ phụ không có giá trị pháp lý trong việc tính toán tiền điện." },
+        { q: "Khiếu nại về chất lượng dịch vụ được gửi đến cấp nào của Điện lực?", a: "Phòng Giao dịch, Điện lực tại địa phương, hoặc Tổng công ty (tùy mức độ)." },
+        { q: "Việc thay đổi công suất Hợp đồng có cần thẩm định kỹ thuật không?", a: "Có, đối với trường hợp tăng công suất để đảm bảo an toàn lưới điện hiện hữu." },
+        { q: "Chỉ số tin cậy (Reliability Index) được đo lường để làm gì?", a: "Đánh giá khả năng cung cấp điện liên tục và chất lượng của hệ thống điện." },
+        { q: "Vai trò của Quy trình Kinh doanh Điện năng?", a: "Thống nhất, chuẩn hóa các hoạt động nghiệp vụ, đảm bảo minh bạch và chất lượng dịch vụ khách hàng." },
+        { q: "Những đơn vị nào có chức năng thực hiện thử nghiệm, kiểm định các thiết bị và công trình điện để phục vụ nghiệm thu", a: "Các tổ chức thực hiện thử nghiệm, kiểm định thiết bị và công trình điện phải là tổ chức có chức năng hoạt động phù hợp theo quy định pháp luật; đối với hoạt động kiểm định an toàn kỹ thuật thiết bị, dụng cụ điện thì phải là tổ chức được Bộ Công Thương chứng nhận đăng ký hoạt động kiểm định theo quy định tại Khoản 5 Điều 3 - Thông tư 02/2025. Các tổ chức thực hiện phải đáp ứng đầy đủ các điều kiện:- Có giấy chứng nhận đăng ký hoạt động thử nghiệm, kiểm định do cơ quan nhà nước có thẩm quyền cấp.- Đội ngũ nhân viên kỹ thuật có chứng chỉ chuyên môn phù hợp và được huấn luyện về an toàn điện.- Trang thiết bị đo lường, thử nghiệm phải được kiểm chuẩn và còn hiệu lực theo quy định của pháp luật về đo lường.- Riêng đối với kiểm định an toàn kỹ thuật, tổ chức phải được Bộ Công Thương cấp giấy chứng nhận đăng ký hoạt động kiểm định." },
+        { q: "Khi chuẩn bị đóng điện công trình mới, những thiết bị chính như máy biến áp, máy cắt cần thực hiện các hạng mục thử nghiệm nào?", a: "Các hạng mục tối thiểu bao gồm: Đo điện trở cách điện và chỉ số hấp thụ.- Đo điện trở một chiều cuộn dây.- Kiểm tra tỷ số biến áp và tổ đấu dây.- Thử nghiệm độ bền điện môi (thử điện áp xoay chiều tăng cao).- Kiểm tra đặc tính dòng - áp của máy biến dòng (TI), máy biến điện áp (TU).- Đo thời gian đóng, cắt và độ đồng thời của các tiếp điểm máy cắt. (Điều 57 - Thông tư 05/2025)." },
+        { q: "Thời điểm nào khách hàng bắt buộc phải thực hiện kiểm định công tơ và thiết bị đo đếm (TI, TU)?", a: "Việc kiểm định thiết bị đo đếm được thực hiện trong 4 trường hợp: Kiểm định ban đầu: Trước khi đưa vào vận hành lần đầu.- Kiểm định định kỳ: Khi hết hiệu lực.- Kiểm định sau sửa chữa: Khi thiết bị có sự thay đổi, tác động vào các bộ phận kỹ thuật.- Kiểm định bất thường: Theo yêu cầu của bên mua hoặc bên bán khi có nghi ngờ về độ chính xác. (Điều 89 - Thông tư 05/2025)." },
+        { q: "Hệ thống bảo vệ rơ le cần đảm bảo những yêu cầu gì trước khi đóng điện?", a: "Hệ thống bảo vệ phải được thử nghiệm toàn diện để đảm bảo: Việc cài đặt các giá trị chỉnh định trên phiếu vào rơ le bảo vệ là một dạng công tác liên quan đến mạch nhị thứ, an toàn vận hành thiết bị nhất thứ và phải được đơn vị QLDA hoặc đơn vị QLVH đăng ký với Cấp điều độ có quyền điều khiển... Các trị số cài đặt (setting) rơ le đúng với phiếu chỉnh định do cấp điều độ có quyền điều khiển phê duyệt. Thử nghiệm mạch nhị thứ, mạch cắt (trip circuit) và các liên động an toàn. Kiểm tra khả năng gửi tín hiệu về trung tâm điều khiển (SCADA) chính xác và không có độ trễ quá quy định. (Điều 27 - Thông tư 05/2025)." },
+        { q: "Khi khách hàng nghi ngờ công tơ chạy sai và yêu cầu kiểm định, ai sẽ là bên chịu chi phí kiểm định?", a: "- Nếu kết quả kiểm định cho thấy thiết bị đo đếm hoạt động chính xác (sai số nằm trong giới hạn cho phép): Khách hàng phải chi trả phí kiểm định.- Nếu kết quả cho thấy thiết bị đo đếm hoạt động không chính xác (sai số vượt quá giới hạn cho phép): Đơn vị sở hữu thiết bị đo đếm phải chi trả phí kiểm định và thực hiện truy thu hoặc hoàn trả tiền điện theo quy định. (Khoản 6 Điều 56 - Luật Điện lực 2024)." },
+        { q: "Ngoài các thiết bị chính, các dụng cụ an toàn như sào cách điện, găng tay cách điện có cần thử nghiệm không?", a: "Có, các dụng cụ an toàn điện như sào cách điện, găng tay cách điện bắt buộc phải được thử nghiệm định kỳ và kiểm tra trước khi sử dụng để đảm bảo an toàn. Tuyệt đối không được sử dụng các dụng cụ đã quá hạn hoặc không có tem kiểm định an toàn kỹ thuật. (Điều 12 - Thông tư 02/2025)." },
+        { q: "Tại sao phải thử nghiệm kiểm định định kỳ TBA chuyên dùng?", a: "Theo Thông tư 02/2025, việc kiểm định nhằm đánh giá tình trạng an toàn kỹ thuật của thiết bị, đảm bảo vận hành đúng tiêu chuẩn, phòng tránh cháy nổ và bảo vệ tính mạng con người. Đây là yêu cầu bắt buộc của pháp luật trước khi đưa vào sử dụng và trong suốt quá trình vận hành. (Điều 12 - Thông tư 02/2025)." },
+        { q: "Những thiết bị nào trong TBA bắt buộc phải kiểm định?", a: "Các thiết bị có điện áp trên 01kV bao gồm: Máy biến áp, máy cắt, chống sét van, cầu dao cách ly, cáp điện, cầu dao, tiếp địa thuộc danh mục bắt buộc. (Điều 12 - Thông tư 02/2025)." },
+        { q: "Nếu kết quả thử nghiệm kiểm định thiết bị điện ghi Không đạt, phải làm gì?", a: "Khi thiết bị không đạt yêu cầu, đơn vị kiểm định sẽ không cấp giấy chứng nhận mới, xóa tem kiểm định cũ chỉ cấp biên bản kiểm định nêu rõ lý do không đạt. Khách hàng phải thực hiện sửa chữa hoặc thay thế thiết bị, sau đó tiến hành kiểm định bất thường trước khi tiếp tục vận hành. (Điều 15 - Thông tư 02/2025)." },
+        { q: "Làm thế nào để biết một đơn vị kiểm định có hợp pháp hay không?", a: "Khách hàng có thể yêu cầu đơn vị đó cung cấp Giấy chứng nhận đăng ký hoạt động kiểm định do Bộ Công Thương cấp còn hiệu lực, hoặc tra cứu danh sách trên Cổng thông tin điện tử của Bộ Công Thương." },
+        { q: "Hồ sơ thử nghiệm, kiểm định cần phải lưu giữ trong bao lâu?", a: "Theo quy định, khách hàng phải lưu giữ kết quả thử nghiệm kiểm định (biên bản và giấy chứng nhận) trong suốt quá trình sử dụng thiết bị. Thời gian lưu giữ tối thiểu là 02 chu kỳ thử nghiệm kiểm định liên tiếp. (Điều 16 - Thông tư 02/2025)." },
+        { q: "Khi nào cần thực hiện kiểm định thiết bị điện bất thường (ngoài định kỳ)?", a: "Cần kiểm định bất thường trong các trường hợp: Sau khi sửa chữa, khắc phục xong sự cố, sau đại tu hoặc thay thế các bộ phận quan trọng của thiết bị. Theo yêu cầu của cơ quan quản lý nhà nước khi phát hiện dấu hiệu mất an toàn. (Khoản 3, Điều 14 - Thông tư 02/2025)." },
+        { q: "Nếu cố tình sử dụng thiết bị điện hết hạn thử nghiệm, kiểm định thì có bị phạt không?", a: "Có, khách hàng sẽ bị xử phạt vi phạm hành chính trong lĩnh vực điện lực. Ngoài ra, nếu xảy ra sự cố gây thiệt hại về người và tài sản do thiết bị quá hạn thử nghiệm kiểm định, chủ đầu tư phải chịu hoàn toàn trách nhiệm theo quy định của pháp luật hiện hành. (Khoản c, Mục 2, Điều 20 - Nghị định 133/2026)." },
+        { q: "Trách nhiệm của người đứng đầu đơn vị sở hữu tài sản khi để xảy ra sự cố lưới điện do thiết bị điện hết hạn thử nghiệm, kiểm định?", a: "Chủ tài sản có trách nhiệm bồi thường toàn bộ thiệt hại thực tế theo quy định của Bộ luật Dân sự. Theo Thông tư 02/2025 và Luật Điện lực, người đứng đầu đơn vị sở hữu thiết bị chịu trách nhiệm cao nhất về việc đảm bảo an toàn. Nếu xảy ra sự cố do lỗi thiết bị hết hạn thử nghiệm kiểm định, người đứng đầu sẽ phải chịu trách nhiệm trước pháp luật, bao gồm bồi thường dân sự và có thể bị truy cứu trách nhiệm hình sự tùy theo mức độ nghiêm trọng của sự việc. (Điều 12, 14 và 16 - Thông tư 02/2025; Điều 46 - Luật Điện lực)." },
+	{ q: "Sau khi có kết quả thử nghiệm, kiểm định các thiết bị điện tài sản của khách hàng, khách hàng có phải báo cáo cho Sở Công Thương nơi sở tại không?", a: "Khách hàng không nhất thiết phải gửi báo cáo từng lần thử nghiệm kiểm định, nhưng phải lưu giữ hồ sơ để xuất trình ngay khi có yêu cầu thanh tra, kiểm tra của Sở Công Thương hoặc đơn vị điện lực.(Điều 16 - Thông tư 02/2025)." },
+	{ q: "Khi nâng công suất trạm biến áp (thay máy biến áp lớn hơn), quy trình thử nghiệm, kiểm định thay đổi thế nào?", a: "Khi thay đổi công suất, đây được coi là cải tạo công trình điện. Khách hàng phải thực hiện. - Thử nghiệm kiểm định, nghiệm thu toàn bộ máy biến áp mới và các thiết bị liên quan mới lắp đặt.- Kiểm tra lại khả năng chịu tải và tính toán lại trị số chỉnh định rơ le bảo vệ cho phù hợp với công suất mới.- Cập nhật hồ sơ kiểm định và gửi thông báo cho đơn vị điện lực khu vực. (Điều 14 -Thông tư 02/2025)." },
+	{ q: "Đối với các trạm biến áp có hệ thống điều khiển tự động (SCADA), việc thử nghiệm kết nối có bắt buộc không?", a: "Bắt buộc. Công trình nhà máy điện hoặc trạm biến áp trước khi đóng điện vận hành phải thực hiện thoả thuận, kết nối tín hiệu SCADA với hệ thống SCADA trung tâm của cấp điều độ có quyền điều khiển để đảm bảo đáp ứng đầy đủ yêu cầu về kết nối hệ thống SCADA theo Quy định và Quy định hệ thống điện truyền tải, Quy định hệ thống điện phân phối do Bộ Công Thương ban hành. (Theo QĐ số 55/QĐ-ĐTĐL ban hành quy định yêu cầu kỹ thuật và quản lý vận hành hệ thống SCADA Của Cục Điều tiết Điện lực ban hành ngày 22/8/2017)." },
+	{ q: "Trường hợp khách hàng không thực hiện TNĐK thì sẽ xử lý như thế nào?", a: "Nếu khách hàng không thực hiện TNĐK thiết bị đấu nối vào lưới điện phân phối, Đơn vị phân phối điện có quyền tách đấu nối theo quy định tại Điều 74 - Thông tư 05/2025." },
+	{ q: "Quyền lợi của khách hàng khi ký hợp đồng TNĐK với đơn vị Điện lực?", a: "Khách hàng sẽ được hưởng các quyền lợi sau:- Các thiết bị thuộc công trình điện của khách hàng sẽ được đánh giá tình trạng kỹ thuật để sớm phát hiện và khắc phục các khiếm khuyết nhằm bảo đảm các trang thiết bị sử dụng điện đáp ứng các tiêu chuẩn kỹ thuật và yêu cầu về an toàn điện trong vận hành, đảm bảo việc cung cấp điện ổn định, liên tục cho các phụ tải của khách hàng.- Khách hàng được hỗ trợ xây dựng kế hoạch TNĐK.- Khách hàng không phải gửi bản sao các biên bản thử nghiệm cho đơn vị phân phối điện để theo dõi.- Ngoài ra, việc TNĐK đảm bảo các trang thiết bị sử dụng điện của khách hàng vận hành an toàn cũng góp phần đảm bảo việc cung cấp điện ổn định, liên tục và nâng cao độ tin cậy cung cấp điện cho lưới điện do Công ty Điện lực quản lý vận hành.- Nếu khách hàng không thực hiện TNĐK thiết bị đấu nối vào lưới điện phân phối, Đơn vị phân phối điện có quyền tách đấu nối theo quy định tại Điều 74 - Thông tư 05/2025." },
+	{ q: "Tại sao khách hàng phải kiểm định an toàn kỹ thuật định kỳ? Không kiểm định an toàn kỹ thuật định kỳ có được không?", a: "Theo quy định tại Điểm (g) Khoản 2 Điều 46 - Luật Điện lực (Điểm (h) Khoản 2 Điều 66 - Luật Điện lực số 61/2024/QH15) quy định nghĩa vụ của Khách hàng sử dụng điện là “Bảo đảm các trang thiết bị sử dụng điện đáp ứng các tiêu chuẩn kỹ thuật và yêu cầu về an toàn điện”.Theo Điều 14 - Thông tư 02/2025quy định danh mục các thiết bị dụng cụ điện phải kiểm định trong đó phải kiểm định lần đầu, định kỳ và đột xuất. Việc thực hiện Kiểm định an toàn kỹ thuật định kỳ nhằm đánh giá tình trạng hoạt động, phát hiện và khắc phục kịp thời các khiếm khuyết của thiết bị (nếu có) tránh tình trạng thiết bị gặp sự cố khi đang vận hành góp phần vào sự vận hành an toàn, liên tục và ổn định lưới điện của Khách hàng cũng như của đơn vị phân phối điện, phòng tránh nguy cơ gây thiệt hại do thiết bị gặp sự cố (cháy, nổ nhà xưởng) và thiệt hại do việc phải ngừng cấp điện để khắc phục sự cố.Như vậy, theo các quy định nêu trên thì việc kiểm định an toàn kỹ thuật định kỳ các thiết bị dụng cụ điện, dụng cụ điện là yêu cầu bắt buộc." },
+	{ q: "Khách hàng có trạm biến áp riêng thì trách nhiệm quản lý, vận hành hệ thống bảo vệ như thế nào?", a: "Khách hàng sử dụng lưới điện phân phối có trạm điện riêng có trách nhiệm thiết kế, lắp đặt, chỉnh định, thử nghiệm và vận hành hệ thống bảo vệ trong phạm vi quản lý để đáp ứng các tiêu chuẩn về thời gian tác động, độ nhạy và tính chọn lọc, đảm bảo vận hành an toàn. Không tự ý thay đổi các thông số chỉnh định của các hệ thống rơ le bảo vệ, tự động hoá, điều khiển và các yêu cầu kỹ thuật khác liên quan trong phạm vi quản lý khi chưa được sự đồng ý của Cấp điều độ có quyền điều khiển. Tiến hành các thử nghiệm hiệu chỉnh cần thiết khi có yêu cầu từ Cấp điều độ có quyền điều khiển.(Điều 161 - Thông tư 05/2025)." },
+	{ q: "Khách hàng có TBA chuyên dùng cần chuẩn bị những tài liệu gì để xác nhận công trình đủ điều kiện đóng điện vào vận hành?", a: "a_Các tài liệu xác nhận công trình đủ các thủ tục về pháp lý và kỹ thuật. - Văn bản xác nhận và cam kết của Khách hàng có nhu cầu đấu nối khẳng định các thiết bị trong phạm vi đóng điện đã được thử nghiệm, kiểm tra đáp ứng các yêu cầu vận hành, yêu cầu kỹ thuật tại điểm đấu nối và tuân thủ đầy đủ quy định pháp luật.- Văn bản thông báo về việc chính thức chấp thuận đóng điện của đơn vị phân phối điện.- Biên bản nghiệm thu lắp đặt Hệ thống đo đếm điện năng đủ điều kiện để phục vụ công tác đóng điện chạy thử, nghiệm thu, đã chốt chỉ số công tơ giao nhận điện năng.- Hợp đồng mua bán điện đã ký hoặc thoả thuận về mua bán, giao nhận điện. b_Các tài liệu xác nhận công trình đủ điều kiện về điều độ, vận hành.- Thiết bị nhất thứ đã được đánh số đúng theo sơ đồ nhất thứ do Cấp điều độ có quyền điều khiển ban hành.- Hệ thống bảo vệ rơ le đã được chỉnh định đúng theo các yêu cầu của Cấp điều độ có quyền điều khiển.- Nhân viên vận hành đã được đào tạo, kiểm tra, cấp Chứng nhận vận hành và công nhận chức danh theo Quy định điều độ, vận hành, thao tác, xử lý sự cố, khởi động đen và khôi phục hệ thống điện quốc gia do Bộ trưởng Bộ Công Thương ban hành, số điện thoại và thông tin liên lạc.- Phương tiện thông tin điều độ theo Quy định điều độ, vận hành, thao tác, xử lý sự cố, khởi động đen và khôi phục hệ thống điện quốc gia do Bộ trưởng Bộ Công Thương ban hành.- Hoàn thiện kết nối thông tin, tín hiệu đầy đủ với hệ thống SCADA, hệ thống thông tin của Cấp điều độ có quyền điều khiển (nếu có).- Quy trình phối hợp vận hành đã được thống nhất giữa Đơn vị phát điện với Cấp điều độ có quyền điều khiển.(Điều 51 - Thông tư 05/2025)." },
+	{ q: "Nhân viên quản lý vận hành đường dây tải điện và TBA cần đáp ứng điều kiện gì?", a: "Nhân viên vận hành đã được đào tạo đủ năng lực, trình độ theo quy định điều độ, vận hành, thao tác, xử lý sự cố, khởi động đen và khôi phục hệ thống điện quốc gia do Bộ trưởng Bộ Công Thương ban hành, bao gồm họ tên, chức danh chuyên môn, trách nhiệm, số điện thoại và thông tin liên lạc.(Khoản b, Điều 69 - Thông tư 05/2025)." },
+	{ q: "Khách hàng có trạm biến áp chuyên dùng có trách nhiệm như thế nào trong công tác bảo vệ an toàn công trình điện lực thuộc tài sản của mình?", a: "Khách hàng có TBA chuyên dùng tự quản lý phải chịu trách nhiệm bảo đảm an toàn tuyệt đối cho công trình điện thuộc sở hữu của mình, bao gồm: kiểm tra, bảo dưỡng, thử nghiệm định kỳ; bảo vệ hành lang an toàn lưới điện cao áp; vận hành đúng quy trình kỹ thuật để tránh cháy nổ và kịp thời báo cáo sự cố cho cơ quan chức năng. (Điều 18 - Nghị định 62/2025/NĐ-CP)." },
+	{ q: "Đơn vị điện lực có quyền kiểm tra TBA của khách hàng không?", a: "Đơn vị điện lực có quyền kiểm tra định kỳ hoặc đột xuất hệ thống bảo vệ, thiết bị đo đếm tại điểm đấu nối nhưng không được làm ảnh hưởng đến vận hành an toàn của khách hàng. (Mục d, Khoản 1, Điều 63 - Luật Điện lực)." },
+	{ q: "Khách hàng có trạm biến áp riêng thì trách nhiệm quản lý như thế nào?", a: "Khách hàng có nghĩa vụ đầu tư, quản lý vận hành và bảo trì toàn bộ hệ thống điện từ sau điểm đấu nối (điểm phân định ranh giới tài sản giữa bên bán và bên mua). TBA riêng thuộc sở hữu của khách hàng, do đó khách hàng phải tự chịu chi phí sửa chữa, thay thế và thử nghiệm kiểm định. (Điều 22 - Thông tư 05/2025)." },
+	{ q: "TBA của khách hàng (không thuê đơn vị có năng lực quản lý vận hành) gây ra sự cố lan truyền vào hệ thống điện Quốc gia do lỗi quản lý, khách hàng có bị xử phạt không?", a: "Có, khách hàng chắc chắn bị xử phạt và phải bồi thường thiệt hại nếu để TBA xảy ra sự cố lan truyền vào lưới điện quốc gia do lỗi quản lý (không thuê đơn vị vận hành chuyên môn hoặc không bảo dưỡng đúng quy định). (Điều 12 - Nghị định 17/2022/NĐ-CP)." },
+	{ q: "Khách hàng có TBA chuyên dùng để xảy ra sự cố cháy nổ do thiếu bảo dưỡng định kỳ có bị xử phạt không?", a: "Có. Nếu cơ quan chức năng xác định nguyên nhân sự cố do đơn vị không thực hiện đầy đủ quy trình kiểm tra, bảo dưỡng thiết bị theo quy định của Luật Điện lực và Thông tư 02/2025/TT-BCT, đơn vị sẽ bị xử phạt về vi phạm an toàn điện và phải bồi thường toàn bộ thiệt hại liên quan cho các bên thứ ba bị ảnh hưởng. (Điều 12 - Nghị định 17/2022/NĐ-CP)." },
+	{ q: "Khách hàng có lợi ích gì khi thuê CTĐL QLVH  lưới điện?", a: "Khi thuê CTĐL QLVH  khách hàng sẽ có những lợi ích sau. a_Lập, cập nhật hồ sơ quản lý kỹ thuật, vận hành đầy đủ theo quy định, cụ thể. Lập lý lịch các thiết bị công trình điện, các đầu sổ theo dõi vận hành; lập, quản lý hồ sơ (Thiết kế kỹ thuật thi công - dự toán, bản vẽ hoàn công, các văn bản nghiệm thu kỹ thuật, các văn bản thử nghiệm, kiểm định,…) tài liệu kỹ thuật các thiết bị công trình điện; quản lý các Quy trình công trình điện theo quy định. b_Trực tiếp quản lý, vận hành toàn bộ thiết bị điện theo ranh giới quy định tại Hợp đồng (từ lèo điểm đấu lấy điện đến hàm trên át tô mát tổng 0,4kV hoặc máy cắt tổng 0,4kV), tuân theo các quy định có hiệu lực của pháp luật Việt Nam. Quy trình, Quy phạm và các văn bản quy định của Tập đoàn Điện lực Việt Nam, của Tổng công ty Điện lực miền Bắc, cụ thể.- Định kỳ kiểm tra toàn bộ các thiết bị điện của lưới điện thuộc ranh giới quy định tại Hợp đồng theo quy định.- Thực hiện vệ sinh, bảo dưỡng các thiết bị trạm biến áp.- Thao tác đóng cắt các thiết bị điện thuộc ranh giới quy định tại Hợp đồng theo yêu cầu của Điều độ Hệ thống điện.- Kịp thời thông báo cho khách hàng các khiếm khuyết của thiết bị (nếu có) sau khi kiểm tra và đề xuất phương án để khách hàng có kế hoạch xử lý.- Tìm và xử lý sự cố lưới điện thuộc ranh giới quy định tại Hợp đồng. c_Được ưu tiên hơn một số nội dung chăm sóc khách hàng, cụ thể. - Thông báo trước các thông tin về tình hình cung ứng và sử dụng điện.- Tư vấn, hỗ trợ khách hàng về sử dụng điện an toàn, tiết kiệm và hiệu quả kết hợp với việc thông báo các nội dung công việc đã thực hiện theo nghĩa vụ Hợp đồng. d_Khi xảy ra sự cố bất khả kháng thiết bị tại trạm biến áp của khách hàng đã ký hợp đồng thuê quản lý vận hành, CTĐL sẽ chủ động phối hợp với khách hàng để xử lý sự cố theo quy định một cách nhanh nhất, giảm thiểu thời gian ngừng cấp điện và thiệt hại trong sản xuất do mất điện." },
+	{ q: "Việc thuê dịch vụ Quản lý vận hành có bắt buộc phải ký kết với Điện lực hay không? Những nguy cơ xảy ra nếu khách hàng không tổ chức QLVH tài sản của mình?", a: "a_Quản lý vận hành thuê là một loại hình dịch vụ, việc sử dụng dịch vụ dựa trên sự thỏa thuận giữa 02 bên (bên cung cấp và bên sử dụng dịch vụ). Khách hàng có thể lựa chọn thuê ngành điện thực hiện hoặc đơn vị ngoài ngành điện thực hiện. Tuy nhiên, nếu khách hàng tự QLVH hoặc thuê đơn vị QLVH công trình điện của mình thì phải tuân thủ các quy định cụ thể sau. - Bố trí nhân lực có trình độ chuyên môn về điện để quản lý vận hành công trình điện theo quy định.- Thuê đơn vị có chức năng theo quy định tại quy trình điều độ hệ thống điện quốc gia của Bộ Công Thương ban hành để đào tạo và công nhận chức danh trực vận hành công trình điện.- Trang bị đầy đủ các phương tiện bảo vệ cá nhân, trang bị dụng cụ phục vụ công tác quản lý vận hành công trình điện như: Sào thao tác; găng, ủng cách điện trung thế; bút thử điện trung thế; guốc trèo cột ly tâm, … b_Trường hợp khách hàng không thực hiện QLVH công trình điện tài sản của mình (không tự thực hiện hoặc ký Hợp đồng thuê bao QLVH công trình điện với đơn vị có đầy đủ năng lực theo quy định của pháp luật) thì sẽ vi phạm các quy định về an toàn trong sử dụng điện quy định tại Khoản 2 Điều 69 - Luật Điện lực 2024. Thêm vào đó, việc thuê đơn vị ngoài ngành điện không đảm bảo về chuyên môn, thiếu kinh nghiệm, không đủ năng lực để QLVH hoặc xử lý sự cố có thể dẫn đến thời gian giải quyết kéo dài, tiềm ẩn nguy cơ không đảm bảo an toàn cho người và thiết bị, ảnh hưởng đến hoạt động sản xuất kinh doanh." },
+	{ q: "Khách hàng đã ký thuê bao quản lý vận hành với ngành điện, khi cần ngừng/cấp điện để sửa chữa tài sản của khách hàng theo kiến nghị của Điện lực thì có mất chi phí đóng/cắt điện không?", a: "Đối với khách hàng đã ký kết hợp đồng thuê bao quản lý vận hành, đơn vị Điện lực sẽ thực hiện hỗ trợ hoàn toàn chi phí thao tác đóng/cắt điện khi có yêu cầu tạm ngừng để sửa chữa tài sản theo kiến nghị kỹ thuật. Đây là chính sách ưu đãi nằm trong gói dịch vụ quản lý vận hành, nhằm đảm bảo hệ thống điện của khách hàng luôn vận hành an toàn, ổn định và tối ưu hóa lợi ích cho đối tác." },
+	{ q: "Đơn vị Điện lực sẽ chủ động phối hợp với khách hàng để xử lý sự cố theo quy định một cách nhanh nhất như thế nào?", a: "Khi xảy ra sự cố bất khả kháng đối với công trình điện của Khách hàng đã ký Hợp đồng quản lý vận hành thuê, Đơn vị Điện lực sẽ thực hiện. - Phân tích, đánh giá để tìm, phát hiện và tách điểm sự cố công trình điện của khách hàng ra khỏi lưới.- Thực hiện hỗ trợ việc lập phương án kỹ thuật; lập, duyệt biện pháp tổ chức thi công để khắc phục sự cố và bố trí nhân lực nếu thuộc khả năng.- Bố trí vật tư, thiết bị và các trang bị dụng cụ, dịch vụ khác (như  thử nghiệm, giám sát, nghiệm thu sau khi khắc phục sự cố) để phối hợp với khách hàng khắc phục sự cố nhanh nhất khi có đề nghị từ khách hàng và việc thanh toán sẽ được thực hiện theo đơn giá, định mức hiện hành kèm theo hóa đơn giá trị gia tăng.- Hướng dẫn, phối hợp với đơn vị thi công do khách hàng thuê để thực hiện khắc phục sự cố trong thời gian sớm nhất khi khách hàng thuê đơn vị thi công ngoài." },
+	{ q: "Tại sao khách hàng phải chịu trách nhiệm đầu tư QLVH dây ra sau công tơ?", a: "Khách hàng chịu trách nhiệm đầu tư đường dây dẫn điện từ sau công tơ mua điện đến nơi sử dụng điện theo quy định tại Điểm (g) Khoản 2 Điều 66 - Luật Điện lực số 61/2024/QH15.- Theo quy định tại Khoản 2 Điều 22 - Thông tư 05/2025 Quy định hệ thống điện phân phối, ranh giới phân định tài sản và quản lý vận hành: Tài sản thuộc sở hữu của bên nào thì bên đó có trách nhiệm đầu tư, xây dựng và quản lý, vận hành theo các tiêu chuẩn và quy định của pháp luật trừ trường hợp có thỏa thuận khác. Đây là các cơ sở pháp lý quy định trách nhiệm của khách hàng trong việc đầu tư QLVH dây ra sau công tơ." },
+	{ q: "Trường hợp khách hàng tự thực hiện hoặc thuê đơn vị bên ngoài thực hiện lắp đặt dây sau công tơ cần thực hiện những gì?", a: "Cần tuân thủ các yêu cầu sau. - Khách hàng có trách nhiệm bảo đảm dây dẫn điện sau công tơ đáp ứng tiêu chuẩn, quy chuẩn kỹ thuật và yêu cầu về an toàn điện theo quy định tại Điều 74 -Luật Điện lực 2024.-Trong quá trình thực hiện khách hàng (hoặc đơn vị được thuê thực hiện) phải tuyệt đối chấp hành các yêu cầu về an toàn điện theo Quy trình an toàn điện áp dụng trong EVN. Phải được tập huấn về an toàn, phải phối hợp với Điện lực thực hiện các biện pháp đảm bảo an toàn khi thực hiện kéo dây tại cột ranh giới và đóng cắt điện khi đấu nối, thay dây dẫn… -Khách hàng phải thanh toán tiền nghiệm thu dây sau công tơ đối với phần dây dẫn khách hàng tự mua." },
+	{ q: "Các lợi ích khi khách hàng thuê dịch vụ lắp đặt sửa chữa dây sau công tơ của Công ty Điện lực?", a: "Khi khách hàng thuê dịch vụ lắp đặt sửa chữa dây sau công tơ của Công ty Điện lực sẽ có được các lợi ích sau:-Khách hàng được sử dụng dịch vụ trọn gói từ đăng ký sử dụng điện đến lúc bàn giao sử dụng theo dạng chìa khóa trao tay, giảm bớt các thủ tục trung gian trong quá trình thực hiện.- Vật tư thiết bị của Công ty Điện lực cung cấp đảm bảo các tiêu chuẩn kỹ thuật và các yêu cầu về an toàn điện.-Giá thành dịch vụ của Công ty Điện lực được quy định bởi các định mức cũng như giá công bố của các cơ quan nhà nước tại địa phương đảm bảo cạnh tranh và minh bạch." },
+	{ q: "Khách hàng đã có dây sau công tơ và thuê Điện lực thực hiện phần nhân công. Tuy nhiên khi yêu cầu dịch vụ, nhân viên Điện lực lại yêu cầu xuất trình biên bản thử nghiệm dây sau công tơ, việc này đúng hay sai?", a: "Việc lựa chọn có sử dụng vật tư thiết bị do ngành Điện cấp hay không là do lựa chọn của khách hàng. Trong trường hợp khách hàng sử dụng dây dẫn tự mua, khách hàng phải chứng minh và cam kết chất lượng dây đảm bảo yêu cầu kỹ thuật vận hành và yêu cầu an toàn. Việc yêu cầu khách hàng phải có giấy thử nghiệm kiểm định, biên bản xuất xưởng để chứng minh dây dẫn của khách hàng đảm bảo chất lượng là phù hợp với quy định. Nếu khách hàng sử dụng dây dẫn điện bảo đảm đúng yêu cầu chất lượng, phù hợp tiêu chuẩn kỹ thuật và yêu cầu về an toàn điện thì sẽ góp phần bảo đảm an toàn trong sử dụng điện, cụ thể như sau. - Hạn chế nguy cơ quá tải, phát nóng dây dẫn gây chập cháy điện;- Giảm nguy cơ rò điện, điện giật đối với người và thiết bị sử dụng điện.- Bảo đảm khả năng chịu tải phù hợp với công suất sử dụng điện. - Góp phần vận hành hệ thống điện ổn định, liên tục và an toàn. - Hạn chế sự cố điện và nguy cơ cháy nổ trong công trình, nhà ở và khu vực sử dụng điện." },
+	{ q: "Khách hàng đăng ký cấp điện mới và thuê dịch vụ lắp đặt trọn gói dây sau công tơ, báo giá VTTB của ngành điện có đơn giá cao hơn thị trường, điều này được giải thích như thế nào?", a: "Vật tư thiết bị do ngành điện cung cấp được nhập trực tiếp từ các nhà sản xuất uy tín thông qua hợp đồng nguyên tắc với mức giá đại lý ưu đãi. Do đó, đơn giá cung cấp luôn đảm bảo tính cạnh tranh và không cao hơn các sản phẩm cùng phân khúc chất lượng trên thị trường.  Giá VTTB của ngành điện luôn đi kèm với cam kết về chứng chỉ chất lượng (CO, CQ) và tiêu chuẩn kỹ thuật khắt khe. Khách hàng nên cân nhắc việc so sánh với các loại dây không rõ nguồn gốc hoặc chất lượng kém được bán trôi nổi, vốn có giá thành rẻ hơn nhưng tiềm ẩn nguy cơ mất an toàn và hao tổn điện năng." },
+	{ q: "Điện mặt trời mái nhà tự sản xuất, tự tiêu thụ được hiểu như thế nào?", a: "Điện mặt trời mái nhà tự sản xuất, tự tiêu thụ (tự sản tự tiêu) là hệ thống điện mặt trời lắp đặt trên mái nhà công trình sản xuất từ các tấm quang điện theo nguyên lý biến đổi từ quang năng thành điện năng và được tiêu thụ tại địa điểm sử dụng điện do tổ chức, cá nhân thực hiện để phục vụ chính cho nhu cầu của tổ chức cá nhân đó.Điều 4 - Luật Điện lực 2024." },
+	{ q: "Có cần phải xin giấy phép hoạt động điện lực khi lắp điện mặt trời dưới 100 kW dành cho hộ gia đình để tự dùng không?", a: "Hộ gia đình lắp đặt điện mặt trời mái nhà tự sản xuất, tự tiêu thụ có công suất dưới 100 kW để phục vụ nhu cầu sử dụng điện của mình thì không phải xin Giấy phép hoạt động điện lực; trường hợp đấu nối với hệ thống điện quốc gia chỉ thực hiện thủ tục thông báo theo quy định tại Khoản 2 Điều 15 - Nghị định 58/2025." },
+	{ q: "Nếu lắp hệ thống ĐMTMN (điện mặt trời mái nhà) dưới 100 kW thì cần làm thủ tục gì?", a: "Đối với dự án dưới 100kW và có đấu nối với lưới điện quốc gia, bạn cần gửi Thông báo theo Mẫu số 01 (tại Phụ lục Nghị định 58/2025) đến Sở Công Thương, đơn vị điện lực và cơ quan quản lý xây dựng, phòng cháy chữa cháy địa phương để theo dõi, quản lý.Khoản 2 Điều 15 - Nghị định 58/2025." },
+	{ q: "Có được bán lượng điện dư từ hệ thống ĐMTMN (điện mặt trời mái nhà) vào lưới điện quốc gia không?", a: "Tổ chức, cá nhân phát triển điện mặt trời mái nhà tự sản xuất, tự tiêu thụ được phép bán sản lượng điện dư phát lên lưới điện quốc gia khi đáp ứng các điều kiện kỹ thuật, an toàn và quy định về đấu nối, mua bán điện theo Điều 14 - Nghị định 58/2025." },
+	{ q: "Khách hàng có trách nhiệm gì về an toàn điện khi sử dụng hệ thống điện mặt trời mái nhà?", a: "Khách hàng sử dụng hệ thống điện mặt trời mái nhà có trách nhiệm thực hiện đầy đủ các yêu cầu về an toàn điện trong quá trình đầu tư, lắp đặt, vận hành và sử dụng hệ thống điện, cụ thể như sau. Bảo đảm hệ thống điện mặt trời mái nhà được thiết kế, lắp đặt, quản lý vận hành phù hợp tiêu chuẩn, quy chuẩn kỹ thuật và quy định về an toàn điện. Sử dụng thiết bị, vật tư điện bảo đảm chất lượng, có nguồn gốc xuất xứ rõ ràng và đáp ứng yêu cầu kỹ thuật.Thực hiện các biện pháp bảo đảm an toàn điện, an toàn phòng cháy chữa cháy trong quá trình sử dụng. Không để xảy ra nguy cơ mất an toàn cho người, thiết bị và hệ thống điện quốc gia. Phối hợp với đơn vị điện lực trong công tác kiểm tra điều kiện đấu nối, vận hành và xử lý sự cố.Chịu trách nhiệm quản lý phần công trình điện thuộc phạm vi tài sản của mình.(Điều 13 - Nghị định 58/2025; Điều 69 - Luật Điện lực 2024)." },
+        { q: "Các hình thức khuyến khích sử dụng năng lượng mặt trời là gì?", a: "Chính sách mua lại điện mặt trời mái nhà (FIT) theo quy định Nhà nước (nếu có)." }
+    ];
+
+    // Đầy đủ 5 bộ đề thi trắc nghiệm kèm hiển thị kết quả, đánh giá chi tiết
+    const quizData = [
+        { 
+            title: "Đề Thi Số 1", 
+            questions: [
+                { q: "1.1: Theo quy trình kinh doanh của EVNNPC, khi khách hàng có yêu cầu qua email, đơn vị điện lực cam kết sẽ liên hệ giải quyết trong thời gian tối đa là bao lâu?", options: ["Phản hồi ngay lập tức", "Trong vòng 12 giờ", "Trong vòng 24 giờ", "Trong vòng 48 giờ"], answer: 2, justification: "Điều 8, Chương III quy định rằng đối với kênh tiếp nhận email, cần có nội dung cam kết liên hệ giải quyết $\le$ 24 giờ." },
+                { q: "1.2: Trong trường hợp khách hàng mua điện tại địa điểm không phải nơi thường trú và không có giấy tờ xác định quyền sử dụng hợp pháp, Hợp đồng mua bán điện (HĐMBĐ) có thời hạn tối đa là bao lâu?", options: ["6 tháng", "Không giới hạn thời gian", "Không quá 12 tháng", "24 tháng"], answer: 2, justification: "Phần III, Chương II quy định rõ rằng trong trường hợp này, thời hạn HĐMBĐ không quá 12 tháng." },
+                { q: "1.3: Khi phát hiện thiết bị đo đếm (TBĐĐ) bị hỏng không do lỗi của khách hàng, Đơn vị Điện lực phải thực hiện thay thế trong thời gian bao lâu?", options: ["Khi có thiết bị thay thế", "03 ngày làm việc", "01 ngày làm việc", "05 ngày làm việc"], answer: 2, justification: "Phần IV quy định rằng nếu nguyên nhân không do khách hàng, Đơn vị Điện lực phải thay thế TBĐĐ trong vòng 01 ngày làm việc kể từ khi phát hiện." },
+                { q: "1.4: Đâu là một trong những loại hình dịch vụ điện lực khác mà EVNNPC cung cấp cho khách hàng?", options: ["Tư vấn thiết kế công trình điện", "Bảo hiểm cháy nổ cho các thiết bị điện", "Cung cấp dịch vụ internet cáp quang", "Bán và lắp đặt các thiết bị gia dụng tiết kiệm điện"], answer: 0, justification: "Điều 23, Phần III liệt kê 'Tư vấn thiết kế công trình điện' là một trong các loại hình dịch vụ mà đơn vị cung cấp." },
+                { q: "1.5: Đơn vị Điện lực được phép ghi chỉ số công tơ (GCS) trước hoặc sau 01 ngày so với lịch đã phê duyệt mà không cần thỏa thuận lại với khách hàng trong trường hợp nào?", options: ["Khi thời tiết xấu gây khó khăn di chuyển", "Khi nhân viên GCS bị ốm đột xuất", "Khi ngày GCS trùng với ngày nghỉ lễ hoặc Tết", "Để thực hiện san tải, cân đối lịch làm việc"], answer: 2, justification: "Điều 3, Phần V cho phép Đơn vị Điện lực được phép ghi chỉ số trước hoặc sau 01 ngày nếu ngày GCS trùng với ngày nghỉ lễ, Tết theo quy định." },
+                { q: "1.6: Đối với thu ngân viên làm việc tại vùng sâu, vùng xa, thời gian tối đa được phép lưu giữ tiền điện đã thu là bao lâu?", options: ["Tối đa 03 ngày", "Tối đa 07 ngày", "Tối đa 01 ngày", "Tối đa 05 ngày"], answer: 0, justification: "Điều 9, Phần VII quy định rõ, đối với vùng sâu, vùng xa, thời gian lưu giữ của thu ngân viên không quá 03 ngày." },
+                { q: "1.7: Theo định nghĩa trong tài liệu, 'Sự kiện điều chỉnh phụ tải điện' là gì?", options: ["Quá trình ký kết thỏa thuận tham gia chương trình điều chỉnh phụ tải.", "Hội nghị khách hàng để vận động tham gia chương trình tiết kiệm điện.", "Khoảng thời gian khách hàng thực hiện điều chỉnh giảm nhu cầu sử dụng điện.", "Việc khảo sát thực tế tại cơ sở của khách hàng để đánh giá tiềm năng."], answer: 2, justification: "Định nghĩa tại Phần IX nêu rõ đây là khoảng thời gian mà khách hàng tham gia thực hiện điều chỉnh giảm nhu cầu sử dụng điện sau khi nhận thông báo." },
+                { q: "1.8: Khi phát hiện hóa đơn tiền điện đã phát hành bị sai sót, thủ tục xử lý nào sau đây là đúng quy trình?", options: ["Làm thủ tục điều chỉnh hóa đơn và phải được lãnh đạo đơn vị ký số phê duyệt.", "Nhân viên tự ý sửa chữa trên bản hóa đơn giấy và đóng dấu 'đã sửa'.", "Thông báo miệng cho khách hàng và điều chỉnh vào kỳ hóa đơn sau.", "Hủy hóa đơn cũ và phát hành hóa đơn mới ngay lập tức."], answer: 0, justification: "Điều 9, Phần VI yêu cầu phải làm thủ tục điều chỉnh hóa đơn, và phiếu giải trình lý do phải được lãnh đạo ký số phê duyệt trên CMIS." },
+                { q: "1.9: Trong tài liệu, chữ viết tắt 'CRM' có nghĩa là gì?", options: ["Chương trình Quản lý Quan hệ khách hàng (Customer Relationship Management)", "Hệ thống Phản hồi Khách hàng Trung tâm (Central Customer Response)", "Chương trình Quản lý Rủi ro Khách hàng (Customer Risk Management)", "Chương trình Báo cáo Khách hàng Hàng tháng (Customer Monthly Report)"], answer: 0, justification: "Phần giải thích từ ngữ và chữ viết tắt định nghĩa CRM là chương trình Quản lý Quan hệ khách hàng." },
+                { q: "1.10: Một trong những nghĩa vụ của Bên Mua điện (khách hàng) khi muốn đơn phương chấm dứt hợp đồng mua bán điện là gì?", options: ["Thanh toán toàn bộ tiền điện phát sinh tính đến thời điểm ngừng sử dụng.", "Nộp lại công tơ và các thiết bị đo đếm cho Đơn vị Điện lực.", "Thông báo bằng văn bản cho Bên Bán điện trước ít nhất 60 ngày.", "Tìm một khách hàng mới để thay thế hợp đồng của mình."], answer: 0, justification: "Điều 12 trong mẫu Hợp đồng quy định Bên B (Bên mua) phải thực hiện nghĩa vụ thanh toán toàn bộ tiền điện phát sinh tính đến thời điểm ngừng sử dụng." }
+            ]
+        },
+        { 
+            title: "Đề Thi Số 2", 
+            questions: [
+                { q: "2.1: Theo quy trình kinh doanh của EVNNPC, khi khách hàng gửi yêu cầu qua email, đơn vị cam kết sẽ liên hệ để giải quyết trong thời gian tối đa là bao lâu?", options: ["≤ 12 giờ", "≤ 48 giờ", "≤ 24 giờ", "≤ 3 ngày làm việc"], answer: 2, justification: "Đây là thời gian cam kết được quy định cho việc phản hồi và bắt đầu giải quyết yêu cầu của khách hàng qua kênh email." },
+                { q: "2.2: Trong trường hợp thiết bị đo đếm (TBĐĐ) bị hỏng mà nguyên nhân không phải do lỗi của khách hàng, Công ty Điện lực (CTĐL) phải thực hiện thay thế thiết bị trong thời gian bao lâu kể từ khi phát hiện?", options: ["Ngay lập tức trong ngày phát hiện", "03 ngày làm việc", "02 ngày làm việc", "01 ngày làm việc"], answer: 3, justification: "Quy trình nêu rõ đây là thời hạn tối đa để CTĐL thay thế TBĐĐ cho khách hàng nhằm đảm bảo quyền lợi và việc cung cấp điện không bị gián đoạn lâu." },
+                { q: "2.3: Khi Đơn vị Điện lực cần thay đổi ngày ghi chỉ số công tơ (GCS) khác với lịch đã được phê duyệt, hành động nào là bắt buộc phải thực hiện?", options: ["Phải được sự chấp thuận bằng văn bản của EVNNPC", "Chỉ cần thông báo cho khách hàng trước 3 ngày", "Được phép tự động thay đổi nếu có lý do chính đáng", "Phải thỏa thuận và thống nhất với khách hàng"], answer: 3, justification: "Đây là yêu cầu bắt buộc để đảm bảo tính minh bạch và quyền lợi của khách hàng, vì việc thay đổi ngày GCS có thể ảnh hưởng đến hóa đơn tiền điện." },
+                { q: "2.4: Đối với khu vực vùng sâu, vùng xa, thời gian lưu giữ tối đa mà một thu ngân viên được phép giữ dữ liệu hóa đơn và tiền điện tương ứng là bao lâu?", options: ["≤ 01 ngày", "≤ 07 ngày", "≤ 03 ngày", "≤ 05 ngày"], answer: 2, justification: "Quy trình có quy định nới lỏng thời gian lưu giữ cho các khu vực vùng sâu, vùng xa do điều kiện đi lại và giao dịch khó khăn." },
+                { q: "2.5: Trong trường hợp khách hàng không có giấy tờ xác định quyền sử dụng hợp pháp địa điểm mua điện, thời hạn tối đa của Hợp đồng mua bán điện (HĐMBĐ) là bao nhiêu?", options: ["Không giới hạn thời hạn", "Không quá 12 tháng", "Không quá 6 tháng", "Không quá 24 tháng"], answer: 1, justification: "Đây là thời hạn tối đa được quy định cho HĐMBĐ trong trường hợp này, nhằm tạo điều kiện cho khách hàng sử dụng điện trong khi hoàn thiện các thủ tục pháp lý." },
+                { q: "2.6: Khoảng thời gian mà khách hàng thực hiện điều chỉnh giảm nhu cầu sử dụng điện sau khi nhận được thông báo từ Đơn vị Điện lực được định nghĩa là gì?", options: ["Sự kiện điều chỉnh phụ tải điện", "Giờ cao điểm hệ thống", "Cam kết biểu đồ phụ tải", "Giai đoạn dịch chuyển phụ tải"], answer: 0, justification: "Đây chính là thuật ngữ được định nghĩa trong quy trình để chỉ khoảng thời gian khách hàng thực hiện giảm nhu cầu sử dụng điện theo yêu cầu." },
+                { q: "2.7: Dữ liệu ghi chỉ số công tơ (GCS) dùng để phát hành hóa đơn tiền điện phải được lưu trữ trên chương trình CMIS với thời gian tối thiểu là bao nhiêu năm?", options: ["5 năm", "2 năm", "3 năm", "10 năm"], answer: 0, justification: "Đây là thời gian lưu trữ bắt buộc đối với dữ liệu GCS trên hệ thống CMIS, đảm bảo tính toàn vẹn và không được can thiệp, chỉnh sửa." },
+                { q: "2.8: Khi nhận được khiếu nại của khách hàng về chỉ số công tơ, Đơn vị Điện lực phải tổ chức kiểm tra và giải quyết trong vòng bao lâu (trừ ngày lễ, Tết)?", options: ["48 giờ", "24 giờ", "3 ngày làm việc", "5 ngày làm việc"], answer: 1, justification: "Đây là thời hạn được quy định để Đơn vị Điện lực phải tổ chức kiểm tra và giải quyết kịp thời khiếu nại của khách hàng, thể hiện sự chuyên nghiệp và tôn trọng khách hàng." },
+                { q: "2.9: Dịch vụ nào sau đây là một trong những loại hình sản xuất kinh doanh dịch vụ điện lực khác được EVNNPC cung cấp?", options: ["Lắp đặt hệ thống nước sinh hoạt", "Cung cấp thiết bị điện gia dụng", "Sửa chữa các thiết bị điện tử của khách hàng", "Lắp đặt, sửa chữa dây sau công tơ"], answer: 3, justification: "Đây là một dịch vụ được liệt kê rõ ràng trong quy trình, liên quan trực tiếp đến hệ thống điện của khách hàng." },
+                { q: "2.10: Đối với các Ngân hàng là tổ chức trung gian thu hộ tiền điện, Đơn vị Điện lực sẽ ký kết loại hợp đồng nào theo mẫu được quy định trong tài liệu?", options: ["Hợp đồng cung cấp dịch vụ hỗ trợ thu hộ tiền điện qua kênh thanh toán của Ngân hàng", "Hợp đồng bảo lãnh thanh toán", "Hợp đồng hợp tác kinh doanh toàn diện", "Hợp đồng ủy nhiệm chi"], answer: 0, justification: "Tên gọi này mô tả chính xác bản chất của hợp đồng và được quy định rõ ràng theo mẫu tại Phụ lục III, Phần VII của quy trình." }
+            ]
+        },
+        { 
+            title: "Đề Thi Số 3", 
+            questions: [
+                { q: "3.1: Theo Quy trình kinh doanh của EVNNPC, khi khách hàng gửi yêu cầu qua email, hệ thống cần đặt chế độ trả lời tự động với nội dung cam kết liên hệ giải quyết trong thời gian tối đa là bao lâu?", options: ["≤ 48 giờ", "≤ 12 giờ", "≤ 08 giờ làm việc", "≤ 24 giờ"], answer: 3, justification: "Điều 8, Chương III quy định rõ đối với kênh tiếp nhận email, cần đặt chế độ tự động trả lời với cam kết liên hệ giải quyết trong vòng 24 giờ." },
+                { q: "3.2: Trong trường hợp phát hiện công tơ điện bị cháy hỏng không do lỗi của khách hàng, Đơn vị Điện lực (CTĐL) phải thực hiện thay thế thiết bị đo đếm (TBĐĐ) cho khách hàng trong thời gian bao lâu?", options: ["Trong thời gian 01 ngày làm việc", "Trong thời gian 05 ngày làm việc", "Trong thời gian 03 ngày làm việc", "Ngay lập tức trong vòng 2 giờ"], answer: 0, justification: "Phần IV, Chương I quy định rõ, nếu xác định nguyên nhân không do khách hàng, CTĐL phải thay thế TBĐĐ trong vòng 01 ngày làm việc." },
+                { q: "3.3: Đối với khu vực vùng sâu, vùng xa, thời gian tối đa cho phép thu ngân viên lưu giữ dữ liệu hóa đơn, biên nhận thanh toán và tiền điện tương ứng là bao lâu?", options: ["≤ 03 ngày", "≤ 05 ngày", "≤ 07 ngày", "≤ 01 ngày"], answer: 0, justification: "Điều 9, Phần VII quy định rõ, đối với vùng sâu, vùng xa, thời gian lưu giữ của thu ngân viên là không quá 03 ngày." },
+                { q: "3.4: Theo quy trình, trường hợp nào sau đây Đơn vị Điện lực được phép ghi chỉ số công tơ sai lệch 01 ngày so với lịch đã được phê duyệt mà không cần thỏa thuận lại với khách hàng?", options: ["Do yêu cầu san tải của Đơn vị Điện lực.", "Khi ngày GCS trùng với ngày nghỉ lễ, Tết theo quy định.", "Khi hệ thống ghi chỉ số từ xa gặp sự cố.", "Do nhân viên ghi chỉ số bận việc đột xuất."], answer: 1, justification: "Điều 3, Phần V cho phép Đơn vị Điện lực ghi chỉ số trước hoặc sau 01 ngày nếu ngày GCS trùng với ngày nghỉ lễ, Tết theo quy định của Pháp luật." },
+                { q: "3.5: Khách hàng mua điện ngoài mục đích sinh hoạt, hết thời hạn hợp đồng thuê địa điểm, chưa có hợp đồng thuê mới nhưng được bên cho thuê đồng ý bằng văn bản cho tiếp tục sử dụng, thì được gia hạn Hợp đồng mua bán điện (HĐMBĐ) với thời hạn mỗi lần không quá bao lâu?", options: ["24 tháng", "12 tháng", "06 tháng", "03 tháng"], answer: 1, justification: "Điều 19, Phần III nêu rõ trong trường hợp này, khách hàng được gia hạn HĐMBĐ với thời hạn mỗi lần không quá 12 tháng." },
+                { q: "3.6: Khi một trong các bên giao nhận điện nghi ngờ thiết bị đo đếm (TBĐĐ) có dấu hiệu hoạt động bất thường và yêu cầu kiểm định đột xuất, Đơn vị yêu cầu kiểm định phải thông báo bằng văn bản cho bên liên quan trước bao nhiêu ngày?", options: ["Trước 07 ngày", "Trước 03 ngày", "Trước 05 ngày", "Trước 10 ngày"], answer: 3, justification: "Điều 22, Phần IV quy định rõ, Đơn vị yêu cầu kiểm định phải thông báo bằng văn bản trước 10 ngày cho Đơn vị giao nhận điện liên quan." },
+                { q: "3.7: Theo quy trình, dữ liệu ghi chỉ số công tơ (GCS) dùng để phát hành hóa đơn tiền điện phải được lưu trữ trên chương trình CMIS trong bao lâu và không được can thiệp, chỉnh sửa?", options: ["3 năm", "5 năm", "10 năm", "2 năm"], answer: 1, justification: "Điều 11, Phần V quy định rằng dữ liệu GCS dùng để phát hành hóa đơn phải được lưu trữ trên CMIS trong 5 năm và không được chỉnh sửa." },
+                { q: "3.8: Trong trường hợp TBĐĐ bị sự cố mang tính đặc chủng, giá trị lớn và không có dự phòng, các bên liên quan có thể thỏa thuận thời hạn hoàn thành thay thế nhưng không quá bao lâu?", options: ["06 tháng", "01 tháng", "03 tháng", "12 tháng"], answer: 0, justification: "Điều 20, Phần IV cho phép các bên thỏa thuận thời hạn thay thế TBĐĐ trong trường hợp đặc biệt này nhưng không quá 06 tháng." },
+                { q: "3.9: Khi khách hàng quyết định không tiếp tục tham gia chương trình điều chỉnh phụ tải điện sau khi đã ký thỏa thuận, khách hàng phải gửi thông báo chính thức cho Đơn vị Điện lực tối thiểu trước bao nhiêu ngày làm việc?", options: ["03 ngày làm việc", "15 ngày làm việc", "10 ngày làm việc", "05 ngày làm việc"], answer: 3, justification: "Điều 6, Phần IX quy định khách hàng phải thông báo tối thiểu trước 05 ngày làm việc khi quyết định không tiếp tục tham gia." },
+                { q: "3.10: Trong quy trình lập hóa đơn tiền điện, nếu sau khi phát hành hóa đơn mới phát hiện sai sót, thủ tục điều chỉnh hóa đơn yêu cầu Phiếu giải trình lý do phải được ai ký số phê duyệt trên chương trình CMIS?", options: ["Lãnh đạo đơn vị (hoặc người được ủy quyền)", "Nhân viên kinh doanh", "Trưởng phòng Tài chính kế toán", "Giám đốc Công ty Điện lực (CTĐL)"], answer: 0, justification: "Điều 9, Phần VI quy định rõ Phiếu giải trình lý do điều chỉnh hóa đơn phải được lãnh đạo đơn vị hoặc người được ủy quyền ký số phê duyệt." }
+            ]
+        },
+        { 
+            title: "Đề Thi Số 4", 
+            questions: [
+                { q: "4.1: Theo quy trình, khi khách hàng gửi yêu cầu qua email, thời gian cam kết để Đơn vị Điện lực liên hệ giải quyết là bao lâu?", options: ["Phản hồi ngay lập tức qua hệ thống tự động", "Trong vòng 12 giờ làm việc", "Không muộn hơn 24 giờ", "Trong vòng 48 giờ"], answer: 2, justification: "Quy trình chăm sóc khách hàng qua các kênh dịch vụ điện tử đặt ra một cam kết về thời gian phản hồi tối đa để đảm bảo giải quyết yêu cầu kịp thời." },
+                { q: "4.2: Trong trường hợp thiết bị đo đếm (TBĐĐ) bị cháy hỏng không do lỗi của khách hàng, Đơn vị Điện lực phải thực hiện thay thế trong thời gian tối đa bao lâu kể từ khi phát hiện?", options: ["07 ngày làm việc", "05 ngày làm việc", "03 ngày làm việc", "01 ngày làm việc"], answer: 3, justification: "Đây là thời hạn được quy định để đảm bảo quyền lợi của khách hàng và khôi phục việc đo đếm chính xác một cách nhanh chóng khi nguyên nhân không xuất phát từ phía họ." },
+                { q: "4.3: Đối với khách hàng mua điện tại địa điểm không phải nơi thường trú và không có giấy tờ xác định quyền sử dụng hợp pháp địa điểm, thời hạn tối đa của Hợp đồng mua bán điện (HĐMBĐ) là bao lâu?", options: ["24 tháng", "12 tháng", "6 tháng", "Vô thời hạn"], answer: 1, justification: "Quy trình giới hạn thời hạn hợp đồng cho trường hợp này để đảm bảo tính pháp lý và quản lý rủi ro, và đây là thời hạn tối đa được quy định." },
+                { q: "4.4: Nếu ngày ghi chỉ số công tơ (GCS) theo lịch trùng với ngày nghỉ lễ, Tết, Đơn vị Điện lực được phép làm gì?", options: ["Bỏ qua kỳ ghi chỉ số đó và tính trung bình cho kỳ sau", "Bắt buộc phải ghi chỉ số đúng vào ngày nghỉ lễ", "Ghi chỉ số trước hoặc sau 1 ngày so với lịch đã duyệt", "Chờ đến ngày làm việc tiếp theo để ghi chỉ số"], answer: 2, justification: "Đây là phương án linh hoạt được quy định để tránh thực hiện công việc vào ngày nghỉ lễ mà vẫn đảm bảo chu kỳ ghi chỉ số gần đúng nhất." },
+                { q: "4.5: Đối với khu vực vùng sâu, vùng xa, thời gian tối đa mà một thu ngân viên được phép lưu giữ tiền điện đã thu và dữ liệu hóa đơn là bao lâu?", options: ["Tối đa 05 ngày", "Tối đa 03 ngày", "Không có quy định giới hạn", "Tối đa 01 ngày"], answer: 1, justification: "Quy trình có sự điều chỉnh linh hoạt về thời gian đối với các khu vực đặc thù như vùng sâu, vùng xa để phù hợp với điều kiện thực tế." },
+                { q: "4.6: Khi phát hiện sai sót trên hóa đơn tiền điện đã phát hành, quy trình yêu cầu hành động nào sau đây là bắt buộc?", options: ["Yêu cầu khách hàng nộp thêm hoặc hoàn lại bằng tiền mặt tại quầy", "Thông báo cho khách hàng và điều chỉnh vào kỳ hóa đơn tiếp theo", "Hủy hóa đơn cũ và tự động phát hành hóa đơn mới", "Lập thủ tục điều chỉnh và có phiếu giải trình được lãnh đạo phê duyệt trên CMIS"], answer: 3, justification: "Đây là quy trình chuẩn để đảm bảo tính minh bạch, trách nhiệm và sự tuân thủ các quy định về tài chính, kế toán." },
+                { q: "4.7: Theo định nghĩa trong tài liệu, 'Sự kiện điều chỉnh phụ tải điện' là gì?", options: ["Chương trình truyền thông nhằm khuyến khích khách hàng tiết kiệm điện", "Thời điểm hệ thống điện quốc gia bị quá tải và phải sa thải phụ tải tự động", "Khoảng thời gian khách hàng tham gia chương trình thực hiện giảm nhu cầu sử dụng điện theo thông báo", "Một hội nghị do Đơn vị Điện lực tổ chức để ký kết thỏa thuận điều chỉnh phụ tải"], answer: 2, justification: "Định nghĩa này mô tả chính xác bản chất của sự kiện: một khoảng thời gian được xác định trước mà trong đó khách hàng chủ động giảm tải." },
+                { q: "4.8: Ai có quyền yêu cầu kiểm định đột xuất thiết bị đo đếm (TBĐĐ) tại các điểm ranh giới giao nhận điện khi có nghi ngờ thiết bị hoạt động bất thường?", options: ["Chỉ đơn vị quản lý vận hành TBĐĐ", "Chỉ Tổng công ty Điện lực miền Bắc (EVNNPC)", "Chỉ cơ quan quản lý nhà nước về đo lường", "Một trong các bên giao nhận điện liên quan"], answer: 3, justification: "Quy trình đảm bảo sự công bằng bằng cách cho phép bất kỳ bên nào có liên quan đến việc giao nhận điện tại điểm đo đó đều có quyền yêu cầu kiểm tra." },
+                { q: "4.9: Dữ liệu ghi chỉ số công tơ (GCS) dùng để phát hành hóa đơn tiền điện phải được lưu trữ trên chương trình CMIS và không được can thiệp trong thời gian tối thiểu là bao lâu?", options: ["3 năm", "5 năm", "10 năm", "1 năm"], answer: 1, justification: "Quy trình quy định một thời gian lưu trữ đủ dài để đảm bảo tính pháp lý, khả năng tra cứu và giải quyết các vấn đề phát sinh sau này." },
+                { q: "4.10: Khách hàng đã ký Thỏa thuận tham gia chương trình điều chỉnh phụ tải nhưng sau đó quyết định không tiếp tục tham gia, họ phải thông báo cho Đơn vị Điện lực trước thời gian tối thiểu là bao lâu?", options: ["Tối thiểu 30 ngày", "Tối thiểu 05 ngày làm việc", "Tối thiểu 10 ngày làm việc", "Tối thiểu 15 ngày"], answer: 1, justification: "Đây là thời gian thông báo trước được quy định để cả hai bên có đủ thời gian xử lý các thủ tục chấm dứt thỏa thuận." }
+            ]
+        },
+        { 
+            title: "Đề Thi Số 5", 
+            questions: [
+                { q: "5.1: Theo quy trình, khi phát hiện công tơ điện bị cháy hỏng không do lỗi của khách hàng, Đơn vị Điện lực (CTĐL) phải thực hiện hành động nào và trong thời gian bao lâu?", options: ["Lập biên bản và chờ kết quả giám định từ cơ quan có thẩm quyền trong 05 ngày.", "Mời khách hàng đến đơn vị để giải quyết bồi thường thiệt hại trong vòng 01 ngày làm việc.", "Thay thế TBĐĐ cho khách hàng trong vòng 01 ngày làm việc kể từ khi phát hiện.", "Thay thế TBĐĐ cho khách hàng trong vòng 03 ngày làm việc."], answer: 2, justification: "Quy trình nêu rõ trách nhiệm thay thế thiết bị đo đếm (TBĐĐ) và tính toán lại điện năng trong khung thời gian này khi lỗi không thuộc về khách hàng." },
+                { q: "5.2: Đối với hình thức Ghi chỉ số (GCS) từ xa, CTĐL phải đảm bảo thu thập chỉ số công tơ điện tử qua bộ tập trung dữ liệu (DCU) với tần suất tối thiểu là bao nhiêu?", options: ["Tối thiểu 01 lần/tuần.", "Tối thiểu 04 lần/ngày.", "Tối thiểu 02 lần/ngày.", "Tối thiểu 01 lần/ngày."], answer: 2, justification: "Điều 10, Phần V quy định rõ trách nhiệm của CTĐL trong việc vận hành HTTTSL để đảm bảo thu thập chỉ số với tần suất này." },
+                { q: "5.3: Trường hợp khách hàng hết thời hạn hợp đồng thuê địa điểm sử dụng điện nhưng được bên cho thuê đồng ý bằng văn bản cho tiếp tục sử dụng, HĐMBĐ có thể được gia hạn với thời hạn mỗi lần không quá bao lâu?", options: ["12 tháng.", "06 tháng.", "24 tháng.", "03 tháng."], answer: 0, justification: "Điều 19, Phần III quy định rõ trong trường hợp này, thời hạn mỗi lần gia hạn không quá 12 tháng." },
+                { q: "5.4: Theo quy trình thu và theo dõi nợ, thời gian tối đa cho phép thu ngân viên tại vùng sâu, vùng xa lưu giữ dữ liệu hóa đơn và tiền điện là bao lâu?", options: ["07 ngày.", "05 ngày.", "03 ngày.", "01 ngày."], answer: 2, justification: "Điều 9, Phần VII quy định rõ thời gian lưu giữ của thu ngân viên tại các khu vực đặc thù này là không quá 03 ngày." },
+                { q: "5.5: Khi một trong các bên giao nhận điện nghi ngờ Thiết bị đo đếm (TBĐĐ) hoạt động bất thường và yêu cầu kiểm định đột xuất, Đơn vị yêu cầu kiểm định phải thông báo bằng văn bản cho bên liên quan trước bao nhiêu ngày?", options: ["Trước 15 ngày.", "Trước 3 ngày.", "Trước 5 ngày.", "Trước 10 ngày."], answer: 3, justification: "Điều 22, Phần IV nêu rõ rằng Đơn vị yêu cầu kiểm định phải thông báo bằng văn bản trước 10 ngày cho bên liên quan về kế hoạch kiểm định." },
+                { q: "5.6: Trong trường hợp ngày Ghi chỉ số công tơ (GCS) trùng với ngày nghỉ lễ, Tết, Đơn vị Điện lực được phép thực hiện GCS như thế nào so với lịch đã phê duyệt?", options: ["Được phép ghi chỉ số trước hoặc sau 01 ngày.", "Chỉ được phép ghi chỉ số sau 01 ngày, không được ghi trước.", "Phải thỏa thuận lại với khách hàng về một ngày GCS mới.", "Phải ghi chỉ số đúng ngày đã phê duyệt, không được thay đổi."], answer: 0, justification: "Điều 3, Phần V cho phép sự linh hoạt này, trừ trường hợp bất khả kháng có nguy cơ mất an toàn." },
+                { q: "5.7: Định nghĩa nào sau đây mô tả đúng nhất về 'Sự kiện điều chỉnh phụ tải điện'?", options: ["Khoảng thời gian Đơn vị Điện lực tiến hành khảo sát thực tế tại cơ sở của khách hàng.", "Khoảng thời gian mà khách hàng ký thỏa thuận tham gia chương trình điều chỉnh phụ tải.", "Khoảng thời gian mà khách hàng thực hiện điều chỉnh giảm nhu cầu sử dụng điện sau khi nhận thông báo.", "Khoảng thời gian hệ thống điện bị quá tải do sự cố hoặc sa thải phụ tải tự động."], answer: 2, justification: "Điều 2, Phần IX định nghĩa đây là khoảng thời gian thực hiện việc giảm nhu cầu sử dụng điện theo yêu cầu từ Đơn vị Điện lực." },
+                { q: "5.8: Sau khi phát hành hóa đơn, nếu phát hiện hóa đơn có sai sót, đơn vị phải làm gì và cần có sự phê duyệt của ai?", options: ["Yêu cầu khách hàng nộp lại hóa đơn sai để làm thủ tục thoái hoàn tiền.", "Tự ý sửa chữa trên hóa đơn gốc và thông báo cho khách hàng.", "Làm thủ tục điều chỉnh hóa đơn và phiếu giải trình phải được lãnh đạo đơn vị ký số phê duyệt trên CMIS.", "Hủy hóa đơn cũ và phát hành hóa đơn mới ngay lập tức."], answer: 2, justification: "Điều 9, Phần VI quy định rõ ràng về trình tự, thủ tục điều chỉnh và yêu cầu phê duyệt bằng chữ ký số của lãnh đạo trên chương trình CMIS." },
+                { q: "5.9: Đối với kênh tiếp nhận yêu cầu của khách hàng qua email, quy trình yêu cầu phải đặt chế độ trả lời tự động với nội dung cam kết gì?", options: ["Cam kết giải quyết vấn đề trong vòng 48 giờ.", "Cam kết sẽ phản hồi khi có kết quả cuối cùng.", "Cam kết chuyển yêu cầu đến bộ phận chuyên trách trong ngày làm việc.", "Cam kết liên hệ giải quyết trong vòng 24 giờ."], answer: 3, justification: "Điều 8, Chương III (về CSKH) quy định rõ nội dung cam kết trong email trả lời tự động là liên hệ giải quyết không quá 24 giờ." },
+                { q: "5.10: Trường hợp TBĐĐ bị sự cố mang tính đặc chủng, giá trị lớn và không có dự phòng, các bên liên quan có thể thỏa thuận thời hạn hoàn thành thay thế nhưng không quá bao lâu?", options: ["Không quá 03 tháng.", "Không quá 12 tháng.", "Không quá 06 tháng.", "Không quá 01 tháng."], answer: 2, justification: "Điều 20, Phần IV cho phép các bên thỏa thuận thời hạn thay thế trong trường hợp đặc biệt này, nhưng không được vượt quá 06 tháng." }
+            ]
+        }
+    ];
+    
+    async function callGeminiAPI(userQuery) {
+        try {
+            const response = await fetch(GEMINI_API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contents: [{ parts: [{ text: userQuery }] }], system_instruction: { parts: [{ text: systemPrompt }] } })
+            });
+            if (!response.ok) throw new Error(`API error: ${response.status}`);
+            const result = await response.json();
+            return result.candidates?.[0]?.content?.parts?.[0]?.text || "Không thể phản hồi.";
+        } catch (error) {
+            return "Lỗi kết nối hoặc API không hợp lệ.";
+        }
+    }
+
+    window.switchMode = function(mode) {
+        currentMode = mode;
+        ['qna', 'quicklearn', 'quiz'].forEach(m => {
+            const item = document.getElementById(`${m}-menu-item`);
+            if (item) item.classList.toggle('active', m === mode);
+        });
+        if (mode === 'qna') renderQnAInterface();
+        else if (mode === 'quiz') renderNewQuizMenu();
+        else if (mode === 'quicklearn') renderQuickLearnInterface();
+    }
+
+    window.renderQnAInterface = function() {
+        document.getElementById('content').innerHTML = `
+            <div class="chat-container h-full">
+                <div class="chat-messages space-y-4 pt-1" id="chat-messages">
+                    <div class="message-bubble bot-message">
+                        <h4>EVNNPC AI Assistant (Song ngữ)</h4>
+                        Xin chào! Tôi là Trợ lý AI về Kinh doanh điện năng & DVKH Điện lực Than Uyên. Hãy nhập câu hỏi của bạn.<br><br>
+                        Hello! I am the EVNNPC Business Process AI Assistant. Please enter your question.
+                    </div>
+                </div>
+                <div class="chat-input flex space-x-3 pt-4">
+                    <input type="text" id="user-input" placeholder="Nhập câu hỏi của bạn về Quy trình kinh doanh EVNNPC..." 
+                           class="flex-grow p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-evn-blue focus:border-evn-blue transition duration-150"
+                           onkeypress="if(event.key === 'Enter') sendMessage()">
+                    <button id="send-btn" class="btn primary flex items-center justify-center w-24" onclick="sendMessage()">
+                        <i class="fas fa-paper-plane mr-2"></i> Gửi
+                    </button>
+                </div>
+            </div>
+        `;
+        document.getElementById('user-input').focus();
+    }
+
+    window.sendMessage = async function() {
+        const inputElement = document.getElementById('user-input');
+        const userQuery = inputElement.value.trim();
+        if (!userQuery) return;
+
+        chatHistory.push({ role: 'user', text: userQuery });
+        inputElement.value = '';
+
+        const messagesContainer = document.getElementById('chat-messages');
+        const loadingId = `loading-${Date.now()}`;
+        messagesContainer.insertAdjacentHTML('beforeend', `
+            <div class="message-bubble bot-message" id="${loadingId}">
+                <div class="flex items-center space-x-1">
+                    <span class="loading-dot"></span><span class="loading-dot"></span><span class="loading-dot"></span>
+                    <span>Đang trả lời... (Answering...)</span>
+                </div>
+            </div>
+        `);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+        const botResponseText = await callGeminiAPI(userQuery);
+        document.getElementById(loadingId)?.remove();
+
+        const separator = '--- English Translation ---';
+        const textIdBase = `response-${Date.now()}`;
+        let formattedResponse = '';
+
+        if (botResponseText.includes(separator)) {
+            const parts = botResponseText.split(separator);
+            formattedResponse = `
+                <h4>EVNNPC AI Assistant (Song ngữ)</h4>
+                <div class="response-lang-block">
+                    <strong>Tiếng Việt</strong>
+                    <button class="tts-button" onclick="speakText('vi-VN', '${textIdBase}-vi')"><i class="fas fa-volume-up"></i></button>
+                    <p id="${textIdBase}-vi">${parts[0].trim()}</p>
+                </div>
+                <div class="response-lang-block">
+                    <strong>English</strong>
+                    <button class="tts-button" onclick="speakText('en-US', '${textIdBase}-en')"><i class="fas fa-volume-up"></i></button>
+                    <p id="${textIdBase}-en">${parts[1].trim()}</p>
+                </div>`;
+        } else {
+            formattedResponse = `
+                <h4>EVNNPC AI Assistant</h4>
+                <div class="response-lang-block">
+                    <strong>Tiếng Việt</strong>
+                    <button class="tts-button" onclick="speakText('vi-VN', '${textIdBase}-vi')"><i class="fas fa-volume-up"></i></button>
+                    <p id="${textIdBase}-vi">${botResponseText}</p>
+                </div>`;
+        }
+
+        chatHistory.push({ role: 'bot', text: formattedResponse });
+        
+        let historyHtml = `<div class="message-bubble bot-message"><h4>EVNNPC AI Assistant (Song ngữ)</h4>Xin chào! Tôi là Trợ lý AI...</div>`;
+        chatHistory.forEach(msg => {
+            historyHtml += `<div class="message-bubble ${msg.role}-message">${msg.role === 'bot' ? msg.text : msg.text}</div>`;
+        });
+        messagesContainer.innerHTML = historyHtml;
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    window.speakText = function(lang, textId) {
+        if ('speechSynthesis' in window) {
+            let text = cleanMarkdown(document.getElementById(textId).innerText);
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = lang;
+            window.speechSynthesis.cancel();
+            window.speechSynthesis.speak(utterance);
+        }
+    }
+
+    // Đã thêm ô tìm kiếm nhanh và thuộc tính lọc dữ liệu
+    window.renderQuickLearnInterface = function() {
+        let html = `
+            <h2 class="text-2xl font-bold mb-4 text-gray-800 border-b pb-2">Học Nhanh (162 Câu Hỏi)</h2>
+            <div class="mb-4">
+                <input type="text" id="quicklearn-search" placeholder="Nhập từ khóa để tìm nhanh câu hỏi..." 
+                       class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-evn-blue focus:border-evn-blue transition duration-150"
+                       oninput="filterQuickLearn()">
+            </div>
+            <div id="quicklearn-list">`;
+        
+        quickLearnData.forEach((item, index) => {
+            html += `
+                <div class="question-card" data-question="${item.q.toLowerCase()} ${item.a.toLowerCase()}">
+                    <div class="question-header" onclick="toggleAnswer(${index})">
+                        <span><span class="text-evn-blue mr-2">${index + 1}.</span> ${item.q}</span>
+                        <i id="icon-${index}" class="fas fa-chevron-down text-gray-500"></i>
+                    </div>
+                    <div id="answer-${index}" class="answer-body hidden"><span class="font-bold text-evn-red">Trả lời:</span> ${item.a}</div>
+                </div>`;
+        });
+        html += `</div>`;
+        document.getElementById('content').innerHTML = html;
+    }
+
+    // Hàm lọc câu hỏi theo từ khóa nhập vào
+    window.filterQuickLearn = function() {
+        const keyword = document.getElementById('quicklearn-search').value.toLowerCase().trim();
+        const cards = document.querySelectorAll('.question-card');
+        cards.forEach(card => {
+            const text = card.getAttribute('data-question');
+            if (text.includes(keyword)) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+
+    window.toggleAnswer = function(index) {
+        const answer = document.getElementById(`answer-${index}`);
+        const icon = document.getElementById(`icon-${index}`);
+        answer.classList.toggle('hidden');
+        icon.classList.toggle('rotate-180');
+    }
+
+    window.renderNewQuizMenu = function() {
+        let html = '<h2 class="text-2xl font-bold mb-6 text-gray-800 border-b pb-2">Thi trắc nghiệm</h2>';
+        quizData.forEach((set, index) => {
+            html += `<div class="bg-white p-6 mb-4 rounded-xl shadow border border-gray-200">
+                <h3 class="text-xl font-semibold text-evn-blue mb-3">${set.title} (${set.questions.length} câu)</h3>
+                <button class="btn primary" onclick="startNewQuiz(${index})">Bắt đầu Thi</button>
+            </div>`;
+        });
+        document.getElementById('content').innerHTML = html;
+    }
+
+    window.startNewQuiz = function(setIndex) {
+        quizState = { currentSetIndex: setIndex, currentQuestionIndex: 0, answers: Array(quizData[setIndex].questions.length).fill(null), score: 0, isReviewed: false };
+        renderQuizQuestion();
+    }
+
+    function renderQuizQuestion() {
+        const currentQ = quizData[quizState.currentSetIndex].questions[quizState.currentQuestionIndex];
+        let optionsHtml = '';
+        currentQ.options.forEach((opt, idx) => {
+            optionsHtml += `<div class="p-4 mb-3 border-2 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100" onclick="selectAnswer(${idx})"><span class="font-semibold text-evn-blue">${String.fromCharCode(65 + idx)}.</span> ${opt}</div>`;
+        });
+        document.getElementById('content').innerHTML = `
+            <h2 class="text-2xl font-bold mb-2 text-evn-blue">${quizData[quizState.currentSetIndex].title}</h2>
+            <p class="text-lg mb-6 text-gray-600">Câu hỏi ${quizState.currentQuestionIndex + 1} / ${quizData[quizState.currentSetIndex].questions.length}</p>
+            <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100"><p class="text-xl font-medium mb-5 text-gray-800">${currentQ.q}</p>${optionsHtml}</div>`;
+    }
+
+    window.selectAnswer = function(idx) {
+        quizState.answers[quizState.currentQuestionIndex] = idx;
+        quizState.currentQuestionIndex++;
+        if (quizState.currentQuestionIndex < quizData[quizState.currentSetIndex].questions.length) {
+            renderQuizQuestion();
+        } else {
+            renderQuizResult();
+        }
+    }
+
+    function renderQuizResult() {
+        const questions = quizData[quizState.currentSetIndex].questions;
+        let score = 0;
+        quizState.answers.forEach((ans, idx) => {
+            if (ans === questions[idx].answer) score++;
+        });
+        
+        let html = `
+            <div class="bg-white p-6 rounded-xl shadow border border-gray-200">
+                <h2 class="text-2xl font-bold text-evn-blue mb-4">Kết Quả Bài Thi</h2>
+                <div class="text-lg font-semibold mb-6">Điểm số của bạn: <span class="text-evn-red text-2xl">${score}</span> / ${questions.length}</div>
+                <button class="btn primary mb-6" onclick="renderNewQuizMenu()">Làm đề khác</button>
+                <hr class="mb-6">
+        `;
+
+        questions.forEach((q, idx) => {
+            const userAns = quizState.answers[idx];
+            const isCorrect = userAns === q.answer;
+            html += `
+                <div class="mb-6 p-4 rounded-lg border ${isCorrect ? 'border-green-300 bg-green-50' : 'border-red-300 bg-red-50'}">
+                    <p class="font-bold mb-2">${idx + 1}. ${q.q}</p>
+                    <p class="text-sm mb-1">Đáp án của bạn: <span class="font-semibold ${isCorrect ? 'text-green-700' : 'text-red-700'}">${userAns !== null ? String.fromCharCode(65 + userAns) + '. ' + q.options[userAns] : 'Chưa chọn'}</span></p>
+                    ${!isCorrect ? `<p class="text-sm mb-1 text-green-700">Đáp án đúng: <span class="font-semibold">${String.fromCharCode(65 + q.answer)}. ${q.options[q.answer]}</span></p>` : ''}
+                    <p class="text-xs text-gray-600 mt-2"><strong>Giải thích:</strong> ${q.justification}</p>
+                </div>
+            `;
+        });
+        html += `</div>`;
+        document.getElementById('content').innerHTML = html;
+    }
+
+    function initSnow() {
+        const snowContainer = document.getElementById('snow-container');
+        for (let i = 0; i < 40; i++) {
+            const snowflake = document.createElement('div');
+            snowflake.classList.add('snowflake');
+            const size = Math.random() * 6 + 4 + 'px';
+            snowflake.style.width = size;
+            snowflake.style.height = size;
+            snowflake.style.left = Math.random() * 100 + 'vw';
+            snowflake.style.animationDuration = Math.random() * 5 + 5 + 's';
+            snowflake.style.animationDelay = Math.random() * 5 + 's';
+            snowContainer.appendChild(snowflake);
+        }
+    }
+
+    window.onload = function() {
+        switchMode('qna');
+        initSnow();
+    }
+</script>
+
+</body>
+</html>
